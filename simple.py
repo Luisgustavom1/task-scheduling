@@ -28,6 +28,7 @@ class Individual(object):
 
         @classmethod
         def create_gnome(self):
+            # create a random chromosome
             global TARGET
             gnome_len = len(TARGET)
             return [self.mutate_genes() for _ in range(gnome_len)]
@@ -62,6 +63,7 @@ def main():
     found = False
     population = []
 
+    # Initialize population
     for _ in range(POPULATION_SIZE):
         gnome = Individual.create_gnome()
         population.append(Individual(gnome))
@@ -75,23 +77,26 @@ def main():
 
         new_generation = []
 
+        # Select parents by evaluating their fitness (only most 10% fit individuals)
         bias = int((10*POPULATION_SIZE)/100)
         new_generation.extend(population[:bias])
 
+        # Crossover parents to reproduce
         bias = int((90*POPULATION_SIZE)/100)
         for _ in range(bias):
             parent1 = random.choice(population[:50])
             parent2 = random.choice(population[:50])
 
+            # Mutate the offsprings
             child = parent1.mate(parent2)
             new_generation.append(child)
 
+        # Merge offsprings with the main population and sort
         population = new_generation
         
         print("Generation: {}\tString: {}\tFitness: {}".format(generation, "".join(population[0].chromosome), population[0].fitness))
         generation += 1
-        
-        
+
     print("Generation: {}\tString: {}\tFitness: {}".format(generation, "".join(population[0].chromosome), population[0].fitness))
 
 if __name__ == '__main__':

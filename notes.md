@@ -7,7 +7,7 @@
   - Based on the fitness function, if there is no acceptable solution, we should make something to generate new better solutions, like a variation in the inputs.
 
 ### Glossary
-  Population: Consiting of some solutions 
+  Population: Consisting of some solutions 
   Chromosome: Represented as a set of parameters (features) that defines the individual.
   Gene: Represented by somehow such as being represented as a string of 0 s and 1 s as in the next diagram
 
@@ -29,9 +29,6 @@
 - There are a lot of representations. The good representation is what makes the *search space smaller and thus easier search*.
 
 Possible representations:
-- Binary: reprensented as a string of zeros.
-- Permutation: useful for ordering problems such as tavelling salesman
+- Binary: represented as a string of zeros.
+- Permutation: useful for ordering problems such as telling salesman
 - Value: the actual value is encoded
-
-Types of represetations
-
