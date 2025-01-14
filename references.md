@@ -1,0 +1,3 @@
+- https://repositorio.ufu.br/bitstream/123456789/44002/3/AlgoritmoGeneticoEscalonamento.pdf
+- https://repositorio.ufu.br/bitstream/123456789/28884/1/RepresentacoesAlgoritmosGeneticos.pdf
+- https://www.kaggle.com/code/zzettrkalpakbal/tutorial-of-genetic-algorithm/notebook
