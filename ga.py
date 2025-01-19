@@ -28,6 +28,13 @@ def crossover(p1, p2):
   c2['position'] = alpha*p2['position'] + (1 - alpha)*p1['position']
   return c1, c2
 
+def mutate(c, mu, sigma):
+  y = copy.deepcopy(c)
+  flag = np.random.rand(*(c['position'].shape)) <= mu
+  ind = np.argwhere(flag)
+  y['position'][ind] += sigma * np.random.randn(*ind.shape)
+  return y
+
 def ga(
     # problem definition
     costfunc,
@@ -105,7 +112,7 @@ def ga(
         if type(bestsol_cost) == float:
           if c1['cost'] < bestsol_cost:
             bestsol_cost = copy.deepcopy(c1)
-        else
+        else:
           # TODO: try not save a entire individual in bestsol_cost
           if c1['cost'] < bestsol_cost['cost']:
             bestsol_cost = copy.deepcopy(c1)
