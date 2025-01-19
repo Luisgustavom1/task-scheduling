@@ -35,6 +35,11 @@ def mutate(c, mu, sigma):
   y['position'][ind] += sigma * np.random.randn(*ind.shape)
   return y
 
+def bounds(c, varmin, varmax):
+  c['position'] = np.maximum(c['position'], varmin)
+  c['position'] = np.minimum(c['position'], varmax)
+  return c['position']
+
 def ga(
     # problem definition
     costfunc,
