@@ -117,5 +117,4 @@ def ga(
     bestsolutions.reverse()
     plot_solution_decrease(bestsolutions)
 
-ga(combination, 6, 4, 1, 30, 50, 0.25, 0.1)
-
+ga(combination, 6, 4, 0, 30, 50, 0.25, 0.1)
