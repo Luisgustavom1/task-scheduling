@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
+import math
 
 def combination(a, b, c, d):
     return abs((a + 2*b + 3*c + 4*d) - 30)
@@ -12,16 +13,19 @@ def roullette_wheel_selection(probs, pop):
   for i, r in enumerate(ra):
     w = np.argwhere(r <= c)
     pos = w[0][0]    
-    newpop[i] = pop[pos]
+    newpop[i] = copy.deepcopy(pop[pos])
   return newpop
 
 def crossover_selection(pop, crossrate):
   i = 0
   selection = []
   while(i < len(pop)):
-    r = np.random.rand();
+    r = np.random.rand()
     if(r < crossrate):
-      selection.append(pop[i])
+      selection.append({
+          'individual': copy.deepcopy(pop[i]),
+          'idx': i,
+      })
     i+=1
   return selection
 
@@ -32,11 +36,11 @@ def crossover(p1, p2, l):
 def mutate(population, npop, numvar, mrate, minbound, maxbound):
   totalgen = npop * numvar
   rate = int(totalgen * mrate)
-  
-  for a in range(rate):
+
+  for i in range(rate):
     r = np.random.randint(1, totalgen)
-    ind = r // numvar
-    gen = r % numvar
+    ind = math.ceil(r / numvar) - 1
+    gen = (r - 1) % numvar
     population[ind]['solution'][gen] = np.random.randint(minbound, maxbound)
 
 def getmostfitness(p, costfunc):
@@ -62,7 +66,6 @@ def plot_solution_decrease(best_solutions, title="Best Solution Decrease Over It
 def ga(
     costfunc, 
     npop,
-    verbose,
     numvar,
     minbound,
     maxbound,
@@ -83,8 +86,8 @@ def ga(
         costs = []
 
         for i in range(npop):
-            ch = population[i]['solution']
-            c = 1 / (1 + costfunc(ch[0], ch[1], ch[2], ch[3]))
+            newch = population[i]['solution']
+            c = 1 / (1 + costfunc(newch[0], newch[1], newch[2], newch[3]))
             population[i]['cost'] = c
             costs.append(c)
             t = t + c
@@ -99,10 +102,12 @@ def ga(
         if lparents <= 1:
           continue
 
-        for i, p in enumerate(parents):
-          parent = parents[(i + 1) % lparents]
-          ch = crossover(p, parent, lparents)
-          parent['solution'] = ch
+        for i, p1 in enumerate(parents):
+          p2Idx = (i + 1) % lparents
+          p2 = parents[p2Idx]['individual']
+
+          newch = crossover(p1['individual'], p2, lparents)
+          newpop[p1['idx']]['solution'] = newch
 
         mutate(newpop, npop, numvar, mrate, minbound, maxbound)
 
@@ -112,5 +117,5 @@ def ga(
     bestsolutions.reverse()
     plot_solution_decrease(bestsolutions)
 
-ga(combination, 6, 1, 4, 0, 30, 50, 0.25, 0.1)
+ga(combination, 6, 4, 1, 30, 50, 0.25, 0.1)
 
