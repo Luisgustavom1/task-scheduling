@@ -45,13 +45,15 @@ def mutate(population, npop, numvar, mrate, minbound, maxbound):
 
 def getmostfitness(p, costfunc):
   cost = -1
+  solution = []
   for i in range(len(p)):
       ch = p[i]['solution']
       c = costfunc(ch[0], ch[1], ch[2], ch[3])
       if cost == -1 or c < cost:
         cost = c
+        solution = ch
 
-  return cost
+  return cost, solution
 
 def plot_solution_decrease(best_solutions, title="Best Solution Decrease Over Iterations"):
     plt.figure(figsize=(10, 6))
@@ -90,31 +92,31 @@ def ga(
             c = 1 / (1 + costfunc(newch[0], newch[1], newch[2], newch[3]))
             population[i]['cost'] = c
             costs.append(c)
-            t = t + c
+            t += c
 
         costs = np.array(costs)
         probs = costs / t
         
         newpop = roullette_wheel_selection(probs, population)
+        population = copy.deepcopy(newpop)
 
-        parents = crossover_selection(newpop, crossrate)
+        parents = crossover_selection(population, crossrate)
         lparents = len(parents)
-        if lparents <= 1:
-          continue
+        if lparents > 1:
+          for i in range(len(parents)):
+            p1 = parents[i]
+            p2 = parents[(i + 1) % lparents]
+            newch = crossover(p1['individual'], p2['individual'], numvar)
+            population[p1['idx']]['solution'] = newch
 
-        for i, p1 in enumerate(parents):
-          p2Idx = (i + 1) % lparents
-          p2 = parents[p2Idx]['individual']
+        mutate(population, npop, numvar, mrate, minbound, maxbound)
 
-          newch = crossover(p1['individual'], p2, lparents)
-          newpop[p1['idx']]['solution'] = newch
-
-        mutate(newpop, npop, numvar, mrate, minbound, maxbound)
-
-        mostfitness = getmostfitness(newpop, costfunc)
+        mostfitness, bestsolution = getmostfitness(population, costfunc)
         bestsolutions.append(mostfitness)
+        if mostfitness == 0:
+            print(f"excellent solution {it}: {bestsolution}")
+            break
 
-    bestsolutions.reverse()
     plot_solution_decrease(bestsolutions)
 
 ga(combination, 6, 4, 0, 30, 50, 0.25, 0.1)
