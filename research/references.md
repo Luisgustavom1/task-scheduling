@@ -1,0 +1,2 @@
+- https://wfcommons.org/
+- Coleman, T., Casanova, H., Pottier, L., Kaushik, M., Deelman, E., & Ferreira da Silva, R. (2022). WfCommons: A Framework for Enabling Scientific Workflow Research and Development. Future Generation Computer Systems, 128, 16-27. https://doi.org/10.1016/j.future.2021.09.043
