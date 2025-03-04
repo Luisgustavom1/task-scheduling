@@ -1,15 +1,24 @@
-from wfcommons import WfChef
+from wfcommons import wfinstances, common
+import networkx as nx
+import matplotlib.pyplot as plt
 
-# Load a workflow instance from a JSON file (in WfFormat)
-workflow_instance_path = "path/to/your/workflow-instance.json"
-chef = WfChef(workflow_instance_path)
+workflow = wfinstances.Instance(input_instance="../dag-instances/wfcommons/simple.json").workflow
 
-# Generate a synthetic workflow recipe based on the instance
-recipe = chef.cook_recipe()
+print(f"Workflow name: {workflow.name}")
+print(f"Task numbers: {len(workflow.tasks)}")
+print(f"Edge numbers: {len(workflow.edges)}")
 
-# Save the generated recipe to a file
-recipe_path = "synthetic-recipe.json"
-recipe.to_file(recipe_path)
+dag = workflow.to_nx_digraph()
 
-print(f"Synthetic workflow recipe saved to {recipe_path}")
+makespan = sum(workflow.tasks[node[0]].runtime if node[0] in workflow.tasks else 0 for node in dag.nodes(data=True))
+print(f"Makespan: {makespan} sec")
 
+critical_path = nx.dag_longest_path(dag, weight='runtime')
+critical_path_runtime = sum(workflow.tasks[node].runtime if node in workflow.tasks else 0 for node in critical_path)
+print(f"Critical path: {critical_path_runtime} segundos")
+
+pos = nx.spring_layout(dag)
+labels = {node: data['id'] for node, data in dag.nodes(data=True)}
+nx.draw(dag, pos, labels=labels, with_labels=True, node_size=200, node_color="lightblue", font_size=10)
+plt.title("DAG do Workflow")
+plt.show()
