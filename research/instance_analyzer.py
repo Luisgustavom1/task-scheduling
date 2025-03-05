@@ -12,6 +12,7 @@ for instance_file in instance_files:
     instance = Instance(input_instance=INSTANCES_PATH.joinpath(instance_file))
     print(f"instance: {instance.name}")
     print(f"tasks: {len(instance.workflow.tasks)}")
+    print(f"edges: {len(instance.workflow.edges)}")
     analyzer.append_instance(instance)
 
 workflow_tasks = ["split_", "blastall_", "cat_"]

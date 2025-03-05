@@ -1,4 +1,4 @@
-from wfcommons import wfinstances, common
+from wfcommons import wfinstances
 import networkx as nx
 import matplotlib.pyplot as plt
 
