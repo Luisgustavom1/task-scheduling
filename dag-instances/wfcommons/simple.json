@@ -14,8 +14,7 @@
                     "name": "cpuhog_chain_00000001",
                     "id": "cpuhog_chain_00000001",
                     "children": [
-                        "cpuhog_chain_00000002",
-                        "cpuhog_chain_00000003"
+                        "cpuhog_chain_00000002"
                     ],
                     "inputFiles": [
                         "chain_00000001_input.txt"
@@ -29,7 +28,7 @@
                     "name": "cpuhog_chain_00000002",
                     "id": "cpuhog_chain_00000002",
                     "children": [
-                        "cpuhog_chain_00000004"
+                        "cpuhog_chain_00000003"
                     ],
                     "inputFiles": [
                         "chain_00000001_output.txt"
@@ -54,7 +53,7 @@
                         "chain_00000003_output.txt"
                     ],
                     "parents": [
-                        "cpuhog_chain_00000001"
+                        "cpuhog_chain_00000002"
                     ]
                 },
                 {
@@ -70,7 +69,6 @@
                         "chain_00000004_output.txt"
                     ],
                     "parents": [
-                        "cpuhog_chain_00000002",
                         "cpuhog_chain_00000003"
                     ]
                 },
