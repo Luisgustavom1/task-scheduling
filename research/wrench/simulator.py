@@ -1,3 +1,4 @@
+import uvicorn
 import json
 import pathlib
 import wrench
@@ -6,8 +7,6 @@ from typing import List, Dict
 from wrench.simulation import Simulation  # For type checking
 from wrench.task import Task  # For type checking
 from wrench.compute_service import ComputeService  # For type checking
-
-from fastapi import FastAPI
 
 def pick_task_to_schedule(tasks: List[Task]):
     """
@@ -190,12 +189,5 @@ def main():
         print(f"Error: {e}")
         exit(1)
 
-app = FastAPI()
-
-@app.on_event("startup")
-async def run_simulation():
-    try:
-        main()  # Call your existing main() function
-        return "Simulation completed successfully!"
-    except Exception as e:
-        return f"Simulation failed: {str(e)}"
+if __name__ == "__main__":
+    uvicorn.run("simulator:main", port=8000, log_level="debug", reload=True)
