@@ -1,0 +1,8 @@
+services:
+  workflow-runner:
+    build: .
+    volumes:
+      - .:/home/wrench
+    platform: linux/amd64
+    ports:
+      - "8000:8000"
