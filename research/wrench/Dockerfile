@@ -1,17 +1,19 @@
 FROM wrenchproject/wrench:unstable
 USER root
 
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && apt-get install -y curl zip python3-venv
+
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN pip install build uvicorn
 
 # Install WRENCH API v0.4
-RUN apt-get -y install zip
-RUN python3 -m pip install build
-RUN wget https://github.com/wrench-project/wrench-python-api/archive/refs/tags/v0.4.zip; unzip v0.4.zip; cd wrench-python-api-0.4; python3 -m build; python3 -m pip install ./dist/wrench-*.whl
-
-RUN python3 -m pip install uvicorn
+RUN wget https://github.com/wrench-project/wrench-python-api/archive/refs/tags/v0.4.zip; unzip v0.4.zip; cd wrench-python-api-0.4; python3 -m build; pip install ./dist/wrench-*.whl
 
 COPY . .
 
 RUN chmod +x ./start.bash
 
-CMD ["./start.bash"] 
+CMD bash ./start.bash

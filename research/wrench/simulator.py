@@ -92,10 +92,8 @@ def schedule_tasks(simulation: Simulation, tasks_to_schedule: List[Task],
     return
 
 
-def main():
+async def app(scope, receive, send):
     try:
-        # Create a new WRENCH simulation
-        print(f"Instantiating a simulation...")
         simulation = wrench.Simulation()
 
         # Starting the simulation, with this simulated process running on the host UserHost
@@ -108,6 +106,7 @@ def main():
         platform_file_path = pathlib.Path(current_dir / "platform.xml")
         with open(platform_file_path, "r") as platform_file:
             xml_string = platform_file.read()
+
         simulation.start(xml_string, user_host)
 
         # Get the list of all hostnames in the platform
@@ -142,7 +141,8 @@ def main():
             per_host_core_speed = bmcs.get_core_flop_rates()
             core_speed = per_host_core_speed[list(per_host_core_speed.keys())[0]]
             compute_resources[bmcs] = {"num_idle_cores": num_cores, "core_speed": core_speed}
-        # print(compute_resources)
+
+        print(compute_resources)
 
         # Import the workflow from JSON
         print(f"Importing the workflow from JSON...")
@@ -185,9 +185,27 @@ def main():
 
         print(f"Workflow execution completed at time {simulation.get_simulated_time()}!")
 
+        await send({
+            "type": "http.response.start",
+            "status": 200,
+            "headers": [(b"content-type", b"text/plain")],
+        })
+        await send({
+            "type": "http.response.body",
+            "body": b"Simulation is done!",
+        })
+
     except wrench.WRENCHException as e:
         print(f"Error: {e}")
-        exit(1)
+        await send({
+            "type": "http.response.start",
+            "status": 500,
+            "headers": [(b"content-type", b"text/plain")],
+        })
+        await send({
+            "type": "http.response.body",
+            "body": b"Internal Server Error",
+        })
 
 if __name__ == "__main__":
-    uvicorn.run("simulator:main", port=8000, log_level="debug", reload=True)
+    uvicorn.run("simulator:app", host="0.0.0.0", port=8000, reload=True)
