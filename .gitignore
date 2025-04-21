@@ -2,3 +2,4 @@ ve/**
 **/tmp/**
 **/fits/**
 **/__pycache__/**
+wfcommons-schema.json
