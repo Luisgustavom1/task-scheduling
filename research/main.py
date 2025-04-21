@@ -1,8 +1,8 @@
 import pathlib
 import os
-from wfcommons import wfinstances, common
+from wfcommons import wfinstances
 from schedulers import FIFOScheduler, HEFTScheduler
-from simulator import Task, Resource, Simulator
+from simulator import Simulator
 
 d = os.path.dirname(os.path.realpath(__file__))
 path = pathlib.Path(d, '..', 'dag-instances', 'wfcommons')
