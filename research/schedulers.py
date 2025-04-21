@@ -1,31 +1,35 @@
-from simulator import Simulator
+import numpy as np
+from simulator import Simulator, Task
 
 class FIFOScheduler:
   def schedule(self, s):
     return sorted(s.tasks, key=lambda x: x.id)
   
 class HEFTScheduler:
+  def __init__(self):
+    self.simulator = None
+
   def schedule(self, s: Simulator):
-    visited_tasks = {}
-    max_rank = 0
+    self.simulator = s
+    self.calcUpwardRank(s.start_task)
+    return sorted(s.tasks, key=lambda x: x.id)
 
-    queue = []
-    queue.append(s.exit_task)
-    while len(queue) > 0:
-      current_task = queue.pop(0)
-      upward_rank = current_task.runtime + max_rank;
+  def calcUpwardRank(self, task: Task):
+    if task.priority is not None:
+      return task.priority
+    
+    successors = []
+    for child_id in task.children:
+      # check if should be child_id - 1 ?????
+      child = self.simulator.tasks[child_id]
+      successorRankU = self.calcUpwardRank(child)
 
-      if upward_rank > max_rank:
-        max_rank = upward_rank
-
-      current_task.priority = upward_rank
-      visited_tasks[current_task.id] = current_task
+      out_transfer = sum([file.size for file in task.output_files])
+      in_transfer = sum([file.size for file in child.input_files])
+      dataTransfer = (out_transfer + in_transfer) / self.simulator.average_transfer_rate
       
-      for parent in current_task.parents:
-        parent_task = s.tasks[parent]
-        if parent_task.id not in visited_tasks:
-          queue.append(parent_task)
+      successors.append(dataTransfer + successorRankU)
 
-    print(visited_tasks)
+    task.priority = task.runtime if len(successors) == 0 else task.runtime + np.amax(successors)
 
-    return sorted(visited_tasks.values(), key=lambda x: -x.priority)
+    return task.priority
