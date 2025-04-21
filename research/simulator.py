@@ -24,9 +24,10 @@ class Resource:
     self.tasks = []
 
 class Simulator:
-  def __init__(self, instance: wfinstances.Instance):
+  def __init__(self, instance: wfinstances.Instance, logging: bool = True):
     self.instance: wfinstances.Instance = instance
     self.workflow: common.Workflow = instance.workflow
+    self.logging = logging
 
     self.tasks: list[Task] = []
     self.resources: list[Resource] = []
@@ -100,7 +101,8 @@ class Simulator:
     for task in scheduled_tasks:
       for resource in self.resources:
         if resource.free_cores >= task.cores:
-          print(f"Task {task.name}/{task.priority} scheduled to resource {resource.name}")
+          self.logger(f"Task {task.name} scheduled on resource {resource.name} at time {self.time}")
+
           task.start_time = self.time
           task.end_time = self.time + task.runtime
 
@@ -110,3 +112,8 @@ class Simulator:
           self.completed_tasks.append(task)
           self.time = max(self.time, task.end_time)
           break
+
+
+  def logger(self, message):
+    if self.logging:
+      print(message)
