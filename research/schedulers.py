@@ -1,35 +1,39 @@
-import numpy as np
-from simulator import Simulator, Task
+from simulator import Simulator
 
 class FIFOScheduler:
   def schedule(self, s):
-    return sorted(s.tasks, key=lambda x: x.id)
+    return sorted(s.tasks)
   
 class HEFTScheduler:
-  def __init__(self):
-    self.simulator = None
+  def __init__(self, s: Simulator):
+    self.s = s
 
-  def schedule(self, s: Simulator):
-    self.simulator = s
-    self.calcUpwardRank(s.start_task)
-    return sorted(s.tasks, key=lambda x: x.id)
+  def schedule(self):
+    self.s.calcUpwardRank(self.s.exit_task)
 
-  def calcUpwardRank(self, task: Task):
-    if task.priority is not None:
-      return task.priority
+    # check if has some task with rank_u None
+    for task_id in self.s.tasks:
+      task = self.s.tasks[task_id]
+      if task.rank_u is None:
+        raise ValueError(f"Task {task.name} has rank_u None")
     
-    successors = []
-    for child_id in task.children:
-      # check if should be child_id - 1 ?????
-      child = self.simulator.tasks[child_id]
-      successorRankU = self.calcUpwardRank(child)
+    nodes = sorted(list(self.s.tasks.values()), key=lambda x: x.rank_u)
 
-      out_transfer = sum([file.size for file in task.output_files])
-      in_transfer = sum([file.size for file in child.input_files])
-      dataTransfer = (out_transfer + in_transfer) / self.simulator.average_transfer_rate
-      
-      successors.append(dataTransfer + successorRankU)
+    while len(nodes) > 0:
+      ni = nodes.pop()
 
-    task.priority = task.runtime if len(successors) == 0 else task.runtime + np.amax(successors)
+      for resource in self.s.resources.values():
+        if resource.free_cores >= ni.cores:
+          self.s.logger(f"Task {ni.name} scheduled on resource {resource.name} at time {self.s.time}")
 
-    return task.priority
+          ni.start_time = self.s.time
+          ni.end_time = self.s.time + ni.avgExecTime
+
+          resource.free_cores -= ni.cores
+          resource.tasks.append(ni)
+
+          self.s.completed_tasks.append(ni)
+          self.s.time = max(self.s.time, ni.end_time)
+          break
+
+    return 

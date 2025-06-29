@@ -2,9 +2,10 @@ import numpy as np
 from wfcommons import common, wfinstances
 
 class Task:
-  def __init__(self, name, runtime, parents, children, priority, cores, input_files: common.File, output_files: common.File):
+  def __init__(self, name, avgExecTime, resourceExecTime,  parents, children, priority, cores, input_files: common.File, output_files: common.File):
     self.name = name
-    self.runtime = runtime
+    self.avgExecTime = avgExecTime
+    self.resourceExecTime = {}
     self.parents = parents
     self.children = children
     self.cores = 1 if cores is None else cores
@@ -17,10 +18,10 @@ class Task:
     self.rank_d = None
 
 class Resource:
-  def __init__(self, id, name, memory, core):
-    self.id = id
+  def __init__(self, name, memory, core, speed):
     self.name = name
     self.memory = memory
+    self.speed = speed
     self.core = core
     self.free_cores = core
     self.tasks = []
@@ -33,7 +34,7 @@ class Simulator:
 
     self.tasks: dict[str, Task] = {}
     self.start_task: Task = None
-    self.resources: list[Resource] = []
+    self.resources: dict[str, Resource] = {}
     self.completed_tasks: list[Task] = []
     self.time = 0
     self.average_transfer_rate = -1
@@ -50,10 +51,25 @@ class Simulator:
   def populateTasks(self):
     for task_id in self.workflow.nodes:
       task: common.Task = self.workflow.tasks[task_id]
+      resourceExecTime = {}
+
+      for machine in task.machines:
+        resourceExecTime[machine.name] = task.runtime
+      
+      reference_resource = self.resources[task.machines[0].name]
+      for resource_id in self.resources:
+        resource = self.resources[resource_id]
+        if resource.name not in resourceExecTime:
+          resourceExecTime[resource.name] = self.estimateExecTime(
+            reference_resource, 
+            resource, 
+            task.runtime
+          )
 
       self.tasks[task_id] = Task(
         task.name, 
-        task.runtime,
+        task.runtime, # TODO: calc avgExecTime
+        resourceExecTime,
         self.workflow.tasks_parents[task_id],
         self.workflow.tasks_children[task_id],
         None,
@@ -63,18 +79,14 @@ class Simulator:
       )
   
   def populateResources(self):
-    i = 0
     for resource_id in self.instance.machines:
       resource = self.instance.machines[resource_id]
-      self.resources.append(
-        Resource(
-          i,
-          resource_id,
-          resource.memory,
-          resource.cpu_cores
-        )
+      self.resources[resource_id] = Resource(
+        resource_id,
+        resource.memory,
+        resource.cpu_cores,
+        resource.cpu_speed
       )
-      i += 1
 
   def calcAverageTransferRate(self):
     all_data_transfer = 0
@@ -112,6 +124,7 @@ class Simulator:
         cores=1,
         input_files=[],
         output_files=[],
+        machines=[]
       )
 
       self.workflow.add_task(artificial_start_task)
@@ -142,6 +155,7 @@ class Simulator:
         cores=0,
         input_files=[],
         output_files=[],
+        machines=[]
       )
 
       self.workflow.add_task(artificial_exit_task)
@@ -167,7 +181,7 @@ class Simulator:
       avgCommunicationCost = self.calcAvgCommunicationCost(task, parent)
       successors.append(avgCommunicationCost + succRankU)
 
-    task.rank_u = task.runtime if len(successors) == 0 else task.runtime + np.amax(successors)
+    task.rank_u = task.avgExecTime if len(successors) == 0 else task.avgExecTime + np.amax(successors)
 
     return task.rank_u
   
@@ -180,7 +194,7 @@ class Simulator:
       child = self.tasks[child_id]
       predRankD = self.calcDownwardRank(child)
       avgCommunicationCost = self.calcAvgCommunicationCost(task, child)
-      predecessors.append(predRankD + child.runtime + avgCommunicationCost)
+      predecessors.append(predRankD + child.avgExecTime + avgCommunicationCost)
 
   def calcAvgCommunicationCost(self, taski: Task, taskj: Task):
     out_transfer = sum([file.size for file in taski.output_files])
@@ -188,6 +202,14 @@ class Simulator:
     avgCommunicationCost = (out_transfer + in_transfer) / self.average_transfer_rate
 
     return avgCommunicationCost
+
+  def estimateExecTime(self, original_resource: Resource, new_resource: Resource, original_time):
+    original_capacity = original_resource.core * original_resource.speed
+    new_capacity = new_resource.core * new_resource.speed
+    
+    estimated_time = original_time * (original_capacity / new_capacity)
+    
+    return estimated_time
 
   def logger(self, message):
     if self.logging:

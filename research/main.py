@@ -12,10 +12,10 @@ args = parser.parse_args()
 
 d = os.path.dirname(os.path.realpath(__file__))
 path = pathlib.Path(d, '..', 'dag-instances', 'wfcommons')
-instance = wfinstances.Instance(input_instance=path.joinpath("blast-chameleon-large-002.json"))
+instance = wfinstances.Instance(input_instance=path.joinpath("1000genome-chameleon-10ch-100k-001.json"))
 
 simulator = Simulator(instance, not args.silence)
-scheduler = HEFTScheduler()
+scheduler = HEFTScheduler(simulator)
 simulator.start(scheduler)
 print(simulator.time)
 
