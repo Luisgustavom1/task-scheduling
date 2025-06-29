@@ -1,30 +1,58 @@
 import numpy as np
 from wfcommons import common, wfinstances
+from typing import List, Optional, Set
+from enum import Enum
+
+class Cpu:
+  speed: Optional[int]
+
+class Machine:
+  name: str
+  cpu: Cpu
+
+
+class File:
+  name: str
+  size: int
+  link: str
+
 
 class Task:
-  def __init__(self, name, avgExecTime, resourceExecTime,  parents, children, priority, cores, input_files: common.File, output_files: common.File):
-    self.name = name
-    self.avgExecTime = avgExecTime
-    self.resourceExecTime = {}
-    self.parents = parents
-    self.children = children
-    self.cores = 1 if cores is None else cores
-    self.priority = priority
-    self.start_time = None
-    self.finish_time = None
-    self.input_files: common.File = input_files
-    self.output_files: common.File = output_files
-    self.rank_u = None
-    self.rank_d = None
+  name: str
+  runtime: float
+  cores: Optional[float] = None
+  memory_in_bytes: Optional[int] = None
+  memory: Optional[int] = None
+  files: List[File] = []
+  machine: Optional[str] = None
+  parents: List[str] = []
 
-class Resource:
-  def __init__(self, name, memory, core, speed):
+class DataItemState(Enum):
+  PENDING = "Pending"  
+  READY = "Ready"
+
+class DataItem:
+  def __init__(
+    self,
+    name: str,
+    size: float,  # MB
+    producer: Optional[int] = None,
+    consumers: Optional[List[int]] = None,
+    state: DataItemState = DataItemState.PENDING,
+  ):
     self.name = name
-    self.memory = memory
-    self.speed = speed
-    self.core = core
-    self.free_cores = core
-    self.tasks = []
+    self.size = size
+    self.producer = producer
+    self.consumers = consumers if consumers is not None else []
+    self.state = state
+
+class Workflow:
+  tasks: List['Task'] = []
+  data_items: List['DataItem'] = []
+  ready_tasks: Set[int] = []
+  completed_task_count: int = 0
+  inputs: Set[int] = []
+  outputs: Set[int] = []
 
 class Simulator:
   def __init__(self, instance: wfinstances.Instance, logging: bool = True):
