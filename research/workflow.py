@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Set
+from typing import List, Set
 
-from task import Task
+from task import Task, TaskState
 from data_item import DataItem, DataItemState
 
-@data
+@dataclass
 class Workflow:
   tasks: List[Task] = field(default_factory=list)
   data_items: List[DataItem] = field(default_factory=list)
@@ -12,7 +12,8 @@ class Workflow:
   completed_task_count: int = 0
   inputs: Set[int] = field(default_factory=set)
   outputs: Set[int] = field(default_factory=set)
-  
+  logging: bool = True
+
   def add_task(self, task: Task):
     task_id = len(self.tasks)
     self.tasks.append(task)
@@ -59,3 +60,7 @@ class Workflow:
     self.inputs.add(data_item_id)
     self.outputs.add(data_item_id)
     return data_item_id
+  
+  def logger(self, message):
+    if self.logging:
+      print(message)
