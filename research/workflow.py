@@ -60,6 +60,15 @@ class Workflow:
     self.inputs.add(data_item_id)
     self.outputs.add(data_item_id)
     return data_item_id
+
+  def get_data_items(self) -> List[DataItem]:
+    return self.data_items
+
+  def get_data_item(self, id: int) -> DataItem:
+    return self.data_items[id]
+
+  def get_tasks(self) -> List[Task]:
+    return self.tasks
   
   def logger(self, message):
     if self.logging:
