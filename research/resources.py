@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from research.scheduler import Id
+from common import Id
 
 @dataclass
 class Resource:

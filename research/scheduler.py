@@ -2,10 +2,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional, Union
 
-from research.resource import Resource
-from research.workflow import Workflow
-
-Id = Union[str, int]
+from common import Id
+from resources import Resource
+from workflow import Workflow
 
 @dataclass
 class TimeSpan:
