@@ -1,3 +1,4 @@
+import math
 import os
 import pathlib
 from typing import Dict, Set
@@ -14,9 +15,9 @@ class Config:
   ignore_memory: bool = False  # If True, memory requirements are ignored
   reference_speed: float = 10.0  # Default speed in Gflop/s for machines without specified speed
 
-def convert_bytes_to_mb(size: int) -> float:
+def convert_bytes_to_mb(size: int) -> int:
   """Convert bytes to megabytes, rounding up to the nearest integer."""
-  return size / 1e6
+  return math.ceil(size / 1e6)
 
 def from_wfcommons(file_path: str, config: Config) -> Workflow:
   d = os.path.dirname(os.path.realpath(__file__))
@@ -39,7 +40,7 @@ def from_wfcommons(file_path: str, config: Config) -> Workflow:
     cores = int(task.cores or 1)
 
     if config.ignore_memory:
-      memory = 0.
+      memory = 0
     else:
       memory = convert_bytes_to_mb(task.memory or 0)
 

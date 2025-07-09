@@ -7,7 +7,6 @@ from copy import deepcopy
 class Resource:
   id: str
   name: str
-  # compute: Compute
   speed: float  # Gflop/s
   cores: int
   cores_available: int

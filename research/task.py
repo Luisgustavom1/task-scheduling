@@ -14,7 +14,7 @@ class TaskState(Enum):
 class Task:
   name: str
   flops: float  # The amount of computations performed by this task in Gflops
-  memory: float   # Memory in MB
+  memory: int   # Memory in MB
   min_cores: int
   max_cores: int
   state: TaskState = TaskState.READY
