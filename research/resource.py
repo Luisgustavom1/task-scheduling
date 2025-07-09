@@ -1,11 +1,10 @@
-from dataclasses import dataclass, field
-from typing import Any
-from copy import deepcopy
+from dataclasses import dataclass
 
+from research.scheduler import Id
 
 @dataclass
 class Resource:
-  id: str
+  id: Id
   name: str
   speed: float  # Gflop/s
   cores: int

@@ -53,7 +53,7 @@ class Runner:
         
         # TODO: talvez pode ser uma lista
         self.data_transfers: Dict[int, DataTransfer] = {} # data_id -> DataTransfer
-        self.data_location: Dict[int, int] = {}  # data_id -> resource_id
+        self.data_location: Dict[int, Id] = {}  # data_id -> resource_id
         self.data_transfer_tasks: Dict[Id, Dict[int, List[Id]]] = {}  # source -> {data_id -> [target_ids]}
         self.resource_data_items: Dict[Id, Set[int]] = {}  # resource_id -> {data_ids}
         self.task_location: Dict[int, int] = {}  # task_id -> resource_id
@@ -69,7 +69,7 @@ class Runner:
         self.task_cores: Dict[int, List[int]] = {}
         self.outputs: Set[int] = set()
         self.actions: List[Action] = []
-        
+
         self.run_stats = RunStats()
         self.ctx = RunnerContext()
         self.config = config
@@ -123,10 +123,8 @@ class Runner:
         return max(finish_times) if finish_times else None
     
     def process_actions(self) -> None:
-        # TODO: Implementação de processamento de ações
-        # for i in 0..self.resources.len() {
-        #     self.process_resource_queue(i);
-        # }
+        for i in range(len(self.resources)): 
+            self.process_resource_queue(i);
 
         for action in self.actions:
             if isinstance(action, ScheduleTask):
@@ -142,7 +140,7 @@ class Runner:
                     return
                 self._process_action(action.task, action.resource, len(action.cores), action.cores, action.expected_span)
             elif isinstance(action, TransferData):
-                self._add_transfer_data_task(action.data_item, action.source, action.target)
+                self._add_data_transfer_task(action.data_item, action.source, action.target)
             
             self.action_id += 1
     
@@ -188,13 +186,13 @@ class Runner:
 
         if self.config.data_transfer_mode == DataTransferMode.ViaMasterNode:
             for data_item_id in data_items:
-                self._add_transfer_data_task(data_item_id, self.id, self.resources[resource_id].id)
+                self._add_data_transfer_task(data_item_id, self.id, self.resources[resource_id].id)
 
         if self.config.data_transfer_mode == DataTransferMode.Direct:
             for data_item_id in data_items:
                 location = self.data_location.get(data_item_id)
                 if location and location != self.resources[resource_id].id:
-                    self._add_transfer_data_task(data_item_id, location, self.resources[resource_id].id)
+                    self._add_data_transfer_task(data_item_id, location, self.resources[resource_id].id)
 
         for core in allowed_cores:
             self.resource_queue[resource_id][core].append(
@@ -212,7 +210,7 @@ class Runner:
 
         self.process_resource_queue(resource_id)
     
-    def _add_transfer_data_task(self, data_item_id: int, source: Id, target: Id) -> None:
+    def _add_data_transfer_task(self, data_item_id: int, source: Id, target: Id) -> None:
         if data_item_id in self.resource_data_items[source]:
             self._transfer_data(data_item_id, source, target)
         else:
@@ -289,21 +287,24 @@ class Runner:
 
                 self.workflow.update_task_state(task_id, TaskState.RUNNING)
 
-                # self.start_task(task_id)
+                self.start_task(task_id)
 
                 something_scheduled = True
                 self.scheduled_actions.add(action_id)
             if not something_scheduled:
                 break
 
-    def set_task_start(self, task_id: int):
+    def start_task(self, task_id: int):
         task = self.workflow.get_task(task_id)
         location = self.task_location.get(task_id)
-        cores = len(self.task_cores.get(task_id, []))
-
         if location is None:
             self.logger.error(f"Task {task_id} has no location assigned")
             return
+            
+        cores = len(self.task_cores.get(task_id, []))
+        resource = self.resources[location]
+
+        self.on_task_completed(task_id)
 
         self.run_stats.set_task_start(
             task_id,
@@ -312,3 +313,81 @@ class Runner:
             task.memory,
             self.ctx.time()
         )
+
+    def on_task_completed(self, task_id: int):
+        task = self.workflow.get_task(task_id)
+
+        self.run_stats.set_task_finish(task_id, self.ctx.time())
+
+        location = self.task_location.get(task_id)
+        task_cores = self.task_cores.get(task_id, [])
+
+        if location not in self.resources:
+            self.logger.error(f"Location {location} not found in resources")
+            return
+
+        resource = self.resources[location]
+        resource.cores_available += len(task_cores)
+        resource.memory_available += task.memory
+
+        for core in task_cores:
+            if location in self.available_cores:
+                self.available_cores[location].append(core)
+
+        self.workflow.update_task_state(task_id, TaskState.DONE)
+        data_items = list(task.outputs)
+
+        if self.config.data_transfer_mode != DataTransferMode.ViaMasterNode:
+            for data_item_id in data_items:
+
+                self.resource_data_items.setdefault(resource.id, set()).add(data_item_id)
+                targets = self.data_transfer_tasks.setdefault(resource.id, {}).pop(data_item_id)
+                if targets:
+                    for target in targets:
+                        self._transfer_data(data_item_id, resource.id, target)
+
+        if self.config.data_transfer_mode == DataTransferMode.Direct:
+            for data_item_id in data_items:
+                self.data_location[data_item_id] = resource.id
+
+            for data_item_id in data_items:
+                for consumer in self.workflow.get_data_item(data_item_id).consumers:
+                    consumer_location = self.task_location.get(consumer)
+                    if consumer_location is not None and location != consumer_location:
+                        self._add_data_transfer_task(
+                            data_item_id,
+                            resource.id,
+                            self.resources[consumer_location].id
+                        )
+
+        # if not self.scheduler.is_static():
+        #     from time import perf_counter
+        #     start = perf_counter()
+        #     actions = self.scheduler.on_task_state_changed(
+        #         task_id,
+        #         TaskState.DONE,
+        #         self.dag,
+        #         System(
+        #             resources=self.resources,
+        #             network=self.network
+        #         ),
+        #         self.ctx
+        #     )
+        #     self.actions.extend(actions)
+        #     self.run_stats.add_scheduling_time(perf_counter() - start)
+
+        self.process_actions()
+        self.check_and_log_completed()
+
+    def check_and_log_completed(self):
+        if self.is_completed():
+            self.logger.info("Workflow completed")
+            self.logger.info(f"Total time: {self.ctx.time():.2f} seconds")
+            self.logger.info(f"Total network traffic: {self.run_stats.total_network_traffic:.2f} MB")
+            self.logger.info(f"Used resources: {self.run_stats.used_resources}")
+            self.logger.info(f"Task resource mapping: {self.run_stats.task_resource}")
+            self.logger.info(f"Resource first used times: {self.run_stats.resource_first_used}")
+            self.logger.info(f"Resource last used times: {self.run_stats.resource_last_used}")
+    
+    def is_completed(self) -> bool:
+        return self.workflow.is_completed() and len(self.data_transfers.values()) == 0

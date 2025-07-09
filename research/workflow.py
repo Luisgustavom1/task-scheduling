@@ -102,6 +102,9 @@ class Workflow:
   def get_task(self, id: int) -> Task:
     return self.tasks[id]
   
+  def is_completed(self) -> bool:
+    return self.completed_task_count == len(self.tasks)
+
   def logger(self, message):
     if self.logging:
       print(message)
