@@ -26,3 +26,5 @@ class SimpleScheduler(Scheduler):
             )
         )
         break;
+    
+    return result

@@ -1,8 +1,12 @@
 import argparse
+import logging
+import sys
 
 from parser.wfcommons import from_wfcommons, Config
 from runner import Runner
 from schedulers.simple import SimpleScheduler
+
+logging.basicConfig(level=logging.DEBUG, handlers=[logging.StreamHandler(sys.stdout)])
 
 parser = argparse.ArgumentParser(description="Run the task scheduler.")
 parser.add_argument("--silence", action="store_true", help="Disable logging for the scheduler.", default=False)
