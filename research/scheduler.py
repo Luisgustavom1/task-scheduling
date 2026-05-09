@@ -4,7 +4,8 @@ from typing import List, Optional, Union
 
 from common import Id
 from resources import Resource
-from workflow import Workflow
+
+from wfcommons import wfinstances
 
 @dataclass
 class TimeSpan:
@@ -38,5 +39,5 @@ Action = Union[ScheduleTask, ScheduleTaskOnCores, TransferData]
 
 class Scheduler(ABC):
   @abstractmethod
-  def start(self, dag: Workflow, resources: List[Resource]) -> List[Action]:
+  def start(self, dag: wfinstances.Instance, resources: List[Resource]) -> List[Action]:
       pass

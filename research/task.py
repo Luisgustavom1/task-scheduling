@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import List
+from typing import List, Optional, Set
 from dataclasses import dataclass, field
 
 class TaskState(Enum):
@@ -20,9 +20,13 @@ class Task:
   state: TaskState = TaskState.READY
   inputs: List[int] = field(default_factory=list)
   outputs: List[int] = field(default_factory=list)
+  parents: Set[int] = field(default_factory=set)
+  children: Set[int] = field(default_factory=set)
   ready_inputs: int = field(default=0, init=False)
-  # TODO: Uncomment when ResourceRestriction is defined
-  # resource_restriction: Optional[ResourceRestriction] = None
+  avg_exec_time: Optional[float] = None
+  rank_u: Optional[float] = None
+  rank_d: Optional[float] = None
+  resource_exec_times: dict[str, float] = field(default_factory=dict)
 
   @classmethod
   def new(cls, name, flops, memory, min_cores, max_cores):
@@ -33,5 +37,4 @@ class Task:
       min_cores=min_cores,
       max_cores=max_cores,
       state=TaskState.READY,
-      # resource_restriction=None
     )

@@ -1,10 +1,8 @@
 import numpy as np
 from wfcommons import common, wfinstances
-from typing import List, Optional, Set
-from enum import Enum
 
 from task import Task
-from workflow import Workflow
+from resources import Resource
 
 class Simulator:
   def __init__(self, instance: wfinstances.Instance, logging: bool = True):

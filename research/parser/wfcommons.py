@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 from workflow import Workflow
 from task import Task
+from resources import Resource
 
 @dataclass
 class Config:
@@ -35,6 +36,19 @@ def from_wfcommons(file_path: str, config: Config) -> Workflow:
   workflow = Workflow()
   data_items: Dict[str, int] = {}
   task_ids: Dict[str, int] = {}
+
+  for machine in machines.values():
+    workflow.add_resource(
+      Resource(
+        id=machine.name,
+        name=machine.name,
+        speed=(machine.cpu_speed / 1000.0) if machine.cpu_speed is not None else config.reference_speed,
+        cores=machine.cpu_cores or 0,
+        cores_available=machine.cpu_cores or 0,
+        memory=machine.memory or 0,
+        memory_available=machine.memory or 0,
+      )
+    )
 
   for task in wf_workflow.tasks.values():
     cores = int(task.cores or 1)
