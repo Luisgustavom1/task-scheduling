@@ -18,29 +18,6 @@ class Simulator:
     self.normalizeExitTasks()
     self.calcAverageTransferRate()
     self.populateResources()
-    self.calcExectTime()
-
-  def calcExectTime(self):
-    for task_id in self.workflow.nodes:
-      wf_task: common.Task = self.workflow.tasks[task_id]
-      resourceExecTime: dict[str, float] = {}
-      machines = wf_task.machines or []
-
-      if machines:
-        for machine in machines:
-          resourceExecTime[machine.name] = wf_task.runtime
-
-        reference_resource = self.resources[machines[0].name]
-        for resource in self.resources.values():
-          if resource.name not in resourceExecTime:
-            resourceExecTime[resource.name] = self.estimateExecTime(
-              reference_resource,
-              resource,
-              wf_task.runtime,
-            )
-      else:
-        for resource in self.resources.values():
-          resourceExecTime[resource.name] = wf_task.runtime
   
   def populateResources(self):
     for resource_id in self.instance.machines:
@@ -134,51 +111,6 @@ class Simulator:
     self.logger("Starting scheduler...")
     scheduler.start(self.instance, list(self.resources.values()))
     self.logger("Scheduler finished.")
-
-  # def calcUpwardRank(self, task: Task):
-  #   if task.rank_u is not None:
-  #     return task.rank_u
-    
-  #   successors = []
-  #   for parent_id in task.parents:
-  #     parent = self.tasks[parent_id]
-  #     succRankU = self.calcUpwardRank(parent) or 0.0
-  #     avgCommunicationCost = self.calcAvgCommunicationCost(task, parent)
-  #     successors.append(avgCommunicationCost + succRankU)
-
-  #   task_avg_exec_time = task.avg_exec_time or 0.0
-  #   task.rank_u = task_avg_exec_time if len(successors) == 0 else task_avg_exec_time + np.amax(successors)
-
-  #   return task.rank_u
-  
-  # def calcDownwardRank(self, task: Task):
-  #   if task.rank_d is not None:
-  #     return task.rank_d
-
-  #   predecessors = []
-  #   for child_id in task.children:
-  #     child = self.tasks[child_id]
-  #     predRankD = self.calcDownwardRank(child)
-  #     avgCommunicationCost = self.calcAvgCommunicationCost(task, child)
-  #     predecessors.append(predRankD + (child.avg_exec_time or 0.0) + avgCommunicationCost)
-
-  #   task.rank_d = 0 if len(predecessors) == 0 else np.amax(predecessors)
-  #   return task.rank_d
-
-  # def calcAvgCommunicationCost(self, taski: Task, taskj: Task):
-  #   out_transfer = sum([file.size for file in taski.output_files])
-  #   in_transfer = sum([file.size for file in taskj.input_files])
-  #   avgCommunicationCost = (out_transfer + in_transfer) / self.average_transfer_rate
-
-  #   return avgCommunicationCost
-
-  def estimateExecTime(self, original_resource: Resource, new_resource: Resource, original_time):
-    original_capacity = original_resource.cpu_cores * original_resource.cpu_speed
-    new_capacity = (new_resource.cpu_cores * new_resource.cpu_speed) or 1
-    
-    estimated_time = original_time * (original_capacity / new_capacity)
-    
-    return estimated_time
 
   def logger(self, message):
     if self.logging:
