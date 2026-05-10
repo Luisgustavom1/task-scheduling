@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import List, Optional, Set
+from typing import Any, List, Optional, Set
 from dataclasses import dataclass, field
 
 class TaskState(Enum):
@@ -18,14 +18,16 @@ class Task:
   min_cores: int
   max_cores: int
   state: TaskState = TaskState.READY
-  inputs: List[int] = field(default_factory=list)
-  outputs: List[int] = field(default_factory=list)
-  parents: Set[int] = field(default_factory=set)
-  children: Set[int] = field(default_factory=set)
+  inputs: List[str] = field(default_factory=list)
+  outputs: List[str] = field(default_factory=list)
+  parents: Set[str] = field(default_factory=set)
+  children: Set[str] = field(default_factory=set)
   ready_inputs: int = field(default=0, init=False)
   avg_exec_time: Optional[float] = None
   rank_u: Optional[float] = None
   rank_d: Optional[float] = None
+  input_files: List[Any] = field(default_factory=list)
+  output_files: List[Any] = field(default_factory=list)
   resource_exec_times: dict[str, float] = field(default_factory=dict)
 
   @classmethod

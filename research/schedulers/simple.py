@@ -1,22 +1,28 @@
+import resource
 from typing import List
-from resources import Resource
 from scheduler import Action, ScheduleTask, Scheduler
 from wfcommons import wfinstances
+from common import Resource, Task
 
 class SimpleScheduler(Scheduler):
-  def start(self, instance: wfinstances.Instance, resources: List[Resource]):
+  def start(self, dag: wfinstances.Instance, resources: List[Resource]):
     result: List[Action] = [];
-    ready_tasks = instance.workflow.ready_tasks.copy()
-    for task_id in ready_tasks:
-      task = instance.workflow.get_task(task_id);
+    for task_id in dag.workflow.tasks:
+      task: Task = dag.workflow.tasks[task_id];
       for i in range(len(resources)):
         resource = resources[i];
-        if resource.cores_available < task.min_cores or resource.memory_available < task.memory:
+        task_cores = int(task.cores or 0)
+        task_memory = int(task.memory or 0)
+
+        resource.cpu_cores = resource.cpu_cores or 0
+        resource.memory = resource.memory or 0
+
+        if resource.cpu_cores < task_cores or resource.memory < task_memory:
           continue;
 
-        cores = min(resource.cores_available, task.max_cores)
-        resource.cores_available -= cores;
-        resource.memory_available -= task.memory;
+        cores = min(resource.cpu_cores, task_cores)
+        resource.cpu_cores -= cores;
+        resource.memory -= task_memory;
         result.append(
             ScheduleTask(
                 task=task_id,

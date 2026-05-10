@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional, Union
 
-from common import Id
-from resources import Resource
+from common import Id, Resource
 
 from wfcommons import wfinstances
 
