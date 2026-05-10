@@ -1,5 +1,6 @@
 from wfcommons import common, wfinstances
 from common import Task, Resource
+from scheduler import Scheduler
 
 class Simulator:
   def __init__(self, instance: wfinstances.Instance, logging: bool = True):
@@ -16,28 +17,7 @@ class Simulator:
 
     self.normalizeStartTasks()
     self.normalizeExitTasks()
-    self.calcAverageTransferRate()
-    self.populateResources()
   
-  def populateResources(self):
-    for resource_id in self.instance.machines:
-      resource = self.instance.machines[resource_id]
-      self.resources[resource_id] = resource
-
-  def calcAverageTransferRate(self):
-    all_data_transfer = 0
-    for edge in self.workflow.edges:
-      source = edge[0]
-      target = edge[1]
-
-      source_t: common.Task = self.workflow.tasks[source]
-      target_t: common.Task = self.workflow.tasks[target]
-
-      out_transfer = sum([file.size for file in source_t.output_files])
-      in_transfer = sum([file.size for file in target_t.input_files])
-      all_data_transfer += out_transfer + in_transfer
-
-    self.average_transfer_rate = all_data_transfer / len(self.instance.machines)
 
   def normalizeStartTasks(self):
     """
@@ -107,9 +87,9 @@ class Simulator:
         self.workflow.tasks_parents[artificial_exit_task.name].add(task)
         self.workflow.tasks_children[task].add(artificial_exit_task.name)
 
-  def start(self, scheduler):
+  def start(self, scheduler: Scheduler):
     self.logger("Starting scheduler...")
-    scheduler.start(self.instance, list(self.resources.values()))
+    tasks = scheduler.start(self.instance, list(self.resources.values()))
     self.logger("Scheduler finished.")
 
   def logger(self, message):
