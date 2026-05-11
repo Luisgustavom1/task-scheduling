@@ -5,3 +5,5 @@ ve/**
 wfcommons-schema.json
 
 .cursor
+.vscode
+.specs
