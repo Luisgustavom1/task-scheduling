@@ -1,12 +1,14 @@
 from collections import deque
+import logging
 from typing import Dict, cast
 from common import Processor, Instance, Workflow, Task
 from scheduler import Scheduler
 
 class Simulator:
-  def __init__(self, instance: Instance):
+  def __init__(self, instance: Instance, logger: logging.Logger | None = None):
     self.instance: Instance = instance
     self.workflow: Workflow = instance.workflow
+    self.logger = logger or logging.getLogger(__name__)
 
     self.ready_tasks = deque()
     self.processors: Dict[str, Processor] = cast(Dict[str, Processor], instance.machines)
@@ -94,18 +96,18 @@ class Simulator:
     makespan = max(h['end'] for h in self.history) if self.history else 0
     throughput = len(self.workflow.tasks) / (makespan or 1)
     
-    self.log("Scheduler finished.")
-    self.log(f"Makespan: {makespan}")
-    self.log(f"Throughput: {throughput:.2f} tasks/s")
+    self.logger.info("Scheduler finished.")
+    self.logger.info(f"Makespan: {makespan}")
+    self.logger.info(f"Throughput: {throughput:.2f} tasks/s")
 
   def start(self, scheduler: Scheduler):
-    self.log(f"Starting scheduler...")
+    self.logger.info(f"Starting scheduler...")
     
     self.ready_tasks.append(self.start_task.task_id)
 
     while len(self.completed_tasks) < len(self.workflow.tasks):
       if not self.ready_tasks:
-        self.log("No ready tasks, but workflow is not complete. Possible deadlock or missing dependencies.")
+        self.logger.warning("No ready tasks, but workflow is not complete. Possible deadlock or missing dependencies.")
         break
 
       action = scheduler.schedule(
@@ -123,6 +125,7 @@ class Simulator:
 
       processor_to_run = self.processors[machine_id]
       free_time = processor_to_run.available_at
+      self.logger.debug(f"freeTime {free_time}s, taskReadyTime {task_ready_time}s")
       start_time = max(free_time, task_ready_time)
 
       duration = self.calculate_task_runtime(task, processor_to_run)
@@ -137,7 +140,7 @@ class Simulator:
         "end": end_time
       })
 
-      self.log(f"task {task_id} escalonada para máquina {machine_id} ({start_time}s -> {end_time}s)")
+      self.logger.debug(f"task {task_id} escalonada para máquina {machine_id} ({start_time}s -> {end_time}s)")
 
       for child_id in self.workflow.tasks_children.get(task_id, []):
         parents: Dict[str, set[str]] = self.workflow.tasks_parents
@@ -150,11 +153,12 @@ class Simulator:
     self.report()
 
   def calculate_task_runtime(self, task: Task, processor: Processor) -> float:
-    machine_runner = task.machines[0] if task.machines else None
+    if task.machines is None or len(task.machines) == 0 or len(task.machines) > 1:
+      self.logger.warning(f"Task {task.task_id} has no specific machine or multiple machines on execution specs, using default runtime.")
+      return task.runtime
+
+    machine_runner = task.machines[0]
     if not machine_runner:
       return task.runtime
     
-    return (task.runtime * processor.cpu_cores) / machine_runner.cpu_cores
-
-  def log(self, message):
-    print(message)
+    return (task.runtime * max(processor.cpu_speed, 1)) / max(machine_runner.cpu_speed, 1)
