@@ -1,8 +1,7 @@
 from collections import deque
 import logging
 from typing import Dict, cast
-from common import Processor, Instance, Workflow, Task
-from scheduler import Scheduler
+from schedulers.scheduler import Instance, Scheduler, Task, Workflow, Processor
 
 class Simulator:
   def __init__(self, instance: Instance, logger: logging.Logger | None = None):

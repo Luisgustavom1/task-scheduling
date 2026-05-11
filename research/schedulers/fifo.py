@@ -1,8 +1,7 @@
 from typing import Dict
 from collections import deque
 
-from common import Processor, Workflow
-from scheduler import Scheduler
+from schedulers.scheduler import Scheduler, Workflow, Processor
 
 class FIFOScheduler(Scheduler):
   def __init__(self):
