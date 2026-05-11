@@ -153,7 +153,7 @@ self.tasks[task_id] = Task(...)
 
 ---
 
-### H2: SimpleScheduler Too Naive
+### H2: FIFOScheduler Too Naive
 
 **Severity:** 🔴 HIGH  
 **Status:** Partial (works but suboptimal)  
@@ -393,7 +393,7 @@ def estimateExecTime(self, ref_resource, target, runtime):  # No types
 | calcDownwardRank returns None | 🔴 | Unresolved | YES | Complete method or remove |
 | No error handling | 🔴 | Unresolved | YES | Add validation + try-catch |
 | Task execution state not tracked | 🔴 | Unresolved | YES | Add time/resource fields to Task |
-| SimpleScheduler naive | 🔴 | Partial | NO | Defer to v1.1; current version works |
+| FIFOScheduler naive | 🔴 | Partial | NO | Defer to v1.1; current version works |
 | Code style inconsistent | ⚠️ | Unresolved | NO | Run Black, add docstrings |
 | Missing type hints | ⚠️ | Partial | NO | Add types to public methods |
 | Resource model simplistic | ⚠️ | Acknowledged | NO | Defer to v1.2 |
