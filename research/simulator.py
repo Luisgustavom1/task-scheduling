@@ -104,49 +104,57 @@ class Simulator:
     self.ready_tasks.append(self.start_task.task_id)
 
     while len(self.completed_tasks) < len(self.workflow.tasks):
-      if self.ready_tasks:
-        decision = scheduler.schedule(
-          self.ready_tasks,
-          self.processors,
-          self.completed_tasks,
-          self.workflow
-        )
+      if not self.ready_tasks:
+        self.log("No ready tasks, but workflow is not complete. Possible deadlock or missing dependencies.")
+        break
 
-        task_id, machine_id, task_ready_time = decision
+      action = scheduler.schedule(
+        self.ready_tasks,
+        self.processors,
+        self.completed_tasks,
+        self.workflow
+      )
 
-        free_time = self.processors[machine_id].available_at
-        start_time = max(free_time, task_ready_time)
+      task_id, machine_id, task_ready_time = action
 
-        # TODO: talvez deveriamos pegar o tempo do execution
-        duration = 10 * self.processors[machine_id].cpu_cores
-        end_time = start_time + duration
+      task: Task | None = self.workflow.tasks.get(task_id)
+      if task is None:
+        continue
 
-        self.processors[machine_id].available_at = end_time
-        self.completed_tasks[task_id] = end_time
-        self.history.append({
-          "task_id": task_id,
-          "processor_id": machine_id,
-          "start": start_time,
-          "end": end_time
-        })
+      processor_to_run = self.processors[machine_id]
+      free_time = processor_to_run.available_at
+      start_time = max(free_time, task_ready_time)
 
-        self.log(f"task {task_id} escalonada para máquina {machine_id} ({start_time}s -> {end_time}s)")
+      duration = self.calculate_task_runtime(task, processor_to_run)
+      end_time = start_time + duration
 
-        task_data: Task | None = self.workflow.tasks.get(task_id)
-        if task_data is None:
-          continue
+      processor_to_run.available_at = end_time
+      self.completed_tasks[task_id] = end_time
+      self.history.append({
+        "task_id": task_id,
+        "processor_id": machine_id,
+        "start": start_time,
+        "end": end_time
+      })
 
-        for child_id in self.workflow.tasks_children.get(task_id, []):
-          parents: Dict[str, set[str]] = self.workflow.tasks_parents
-          if all(task in self.completed_tasks for task in parents.get(child_id, [])):
-            if child_id not in self.ready_tasks:
-              self.ready_tasks.append(child_id)
-      else: 
-        if not self.ready_tasks and len(self.completed_tasks) < len(self.workflow.tasks):
-          self.log("No ready tasks, but workflow is not complete. Possible deadlock or missing dependencies.")
-          break
+      self.log(f"task {task_id} escalonada para máquina {machine_id} ({start_time}s -> {end_time}s)")
+
+      for child_id in self.workflow.tasks_children.get(task_id, []):
+        parents: Dict[str, set[str]] = self.workflow.tasks_parents
+        
+        # we only add the child task to the ready queue if all its parent tasks have been completed
+        if all(task in self.completed_tasks for task in parents.get(child_id, [])):
+          if child_id not in self.ready_tasks:
+            self.ready_tasks.append(child_id)
 
     self.report()
+
+  def calculate_task_runtime(self, task: Task, processor: Processor) -> float:
+    machine_runner = task.machines[0] if task.machines else None
+    if not machine_runner:
+      return task.runtime
+    
+    return (task.runtime * processor.cpu_cores) / machine_runner.cpu_cores
 
   def log(self, message):
     print(message)
