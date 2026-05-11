@@ -3,4 +3,8 @@ from wfcommons import common, wfinstances
 
 Id = Union[str, int]
 Task = common.Task
-Resource = common.Machine
+Workflow = common.Workflow
+Instance = wfinstances.Instance
+
+class Processor(common.Machine):
+  available_at: float

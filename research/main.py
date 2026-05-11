@@ -7,7 +7,7 @@ import sys
 
 from simulator import Simulator
 from wfcommons import wfinstances
-from schedulers.simple import SimpleScheduler
+from schedulers.fifo import FIFOScheduler
 
 parser = argparse.ArgumentParser(description="Run the task scheduler.")
 parser.add_argument("--silence", action="store_true", help="Disable logging for the scheduler.", default=False)
@@ -30,7 +30,7 @@ total_tasks = len(workflow.workflow.tasks)
 
 logging.info(f"Total tasks: {total_tasks}")
 
-scheduler = SimpleScheduler()
-simulator = Simulator(workflow, args.silence)
+simulator = Simulator(workflow)
+scheduler = FIFOScheduler()
 
 simulator.start(scheduler)

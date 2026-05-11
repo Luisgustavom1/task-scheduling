@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Union
+from typing import Dict, Optional, Union
+from collections import deque
 
-from common import Id, Resource
-
-from wfcommons import wfinstances
+from common import Processor, Workflow
 
 @dataclass
 class TimeSpan:
@@ -21,22 +20,16 @@ class ScheduleTask:
   cores: int
   expected_span: Optional[TimeSpan] = None
 
-@dataclass
-class ScheduleTaskOnCores:
-  task: int
-  resource: int
-  cores: List[int]
-  expected_span: Optional[TimeSpan] = None
 
-@dataclass
-class TransferData:
-  data_item: int
-  source: Id
-  target: Id
-
-Action = Union[ScheduleTask, ScheduleTaskOnCores, TransferData]
+Action = Union[ScheduleTask]
 
 class Scheduler(ABC):
   @abstractmethod
-  def start(self, dag: wfinstances.Instance, resources: List[Resource]) -> List[Action]:
-      pass
+  def schedule(
+    self,
+    ready_tasks: deque,
+    processors: Dict[str, Processor],
+    completed_tasks: Dict[str, float],
+    workflow: Workflow
+  ) -> tuple[int, str, float]:
+    pass

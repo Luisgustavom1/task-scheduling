@@ -1,23 +1,26 @@
-from wfcommons import common, wfinstances
-from common import Task, Resource
+from collections import deque
+from typing import Dict, cast
+from common import Processor, Instance, Workflow, Task
 from scheduler import Scheduler
 
 class Simulator:
-  def __init__(self, instance: wfinstances.Instance, logging: bool = True):
-    self.instance: wfinstances.Instance = instance
-    self.workflow: common.Workflow = instance.workflow
-    self.logging = logging
+  def __init__(self, instance: Instance):
+    self.instance: Instance = instance
+    self.workflow: Workflow = instance.workflow
 
-    self.start_task: common.Task
-    self.exit_task: common.Task
-    self.resources: dict[str, Resource] = {}
-    self.completed_tasks: list[Task] = []
-    self.time = 0
-    self.average_transfer_rate = -1
+    self.ready_tasks = deque()
+    self.processors: Dict[str, Processor] = cast(Dict[str, Processor], instance.machines)
+    for processor in self.processors.values():
+      setattr(processor, "available_at", 0.0)
+
+    self.completed_tasks = {} # task_id -> end_time
+    self.history = []
+
+    self.start_task: Task
+    self.exit_task: Task
 
     self.normalizeStartTasks()
     self.normalizeExitTasks()
-  
 
   def normalizeStartTasks(self):
     """
@@ -34,7 +37,7 @@ class Simulator:
         start_tasks.append(task)
 
     if len(start_tasks) > 1:
-      entry_point = common.Task(
+      entry_point = Task(
         task_id="entry_point",
         name="entry_point",
         runtime=0,
@@ -68,7 +71,7 @@ class Simulator:
         exit_tasks.append(task)
 
     if len(exit_tasks) > 1:
-      artificial_exit_task = common.Task(
+      artificial_exit_task = Task(
         task_id="artificial_exit_task",
         name="artificial_exit_task",
         runtime=0,
@@ -87,11 +90,63 @@ class Simulator:
         self.workflow.tasks_parents[artificial_exit_task.name].add(task)
         self.workflow.tasks_children[task].add(artificial_exit_task.name)
 
-  def start(self, scheduler: Scheduler):
-    self.logger("Starting scheduler...")
-    tasks = scheduler.start(self.instance, list(self.resources.values()))
-    self.logger("Scheduler finished.")
+  def report(self):
+    makespan = max(h['end'] for h in self.history) if self.history else 0
+    throughput = len(self.workflow.tasks) / (makespan or 1)
+    
+    self.log("Scheduler finished.")
+    self.log(f"Makespan: {makespan}")
+    self.log(f"Throughput: {throughput:.2f} tasks/s")
 
-  def logger(self, message):
-    if self.logging:
-      print(message)
+  def start(self, scheduler: Scheduler):
+    self.log(f"Starting scheduler...")
+    
+    self.ready_tasks.append(self.start_task.task_id)
+
+    while len(self.completed_tasks) < len(self.workflow.tasks):
+      if self.ready_tasks:
+        decision = scheduler.schedule(
+          self.ready_tasks,
+          self.processors,
+          self.completed_tasks,
+          self.workflow
+        )
+
+        task_id, machine_id, task_ready_time = decision
+
+        free_time = self.processors[machine_id].available_at
+        start_time = max(free_time, task_ready_time)
+
+        # TODO: talvez deveriamos pegar o tempo do execution
+        duration = 10 * self.processors[machine_id].cpu_cores
+        end_time = start_time + duration
+
+        self.processors[machine_id].available_at = end_time
+        self.completed_tasks[task_id] = end_time
+        self.history.append({
+          "task_id": task_id,
+          "processor_id": machine_id,
+          "start": start_time,
+          "end": end_time
+        })
+
+        self.log(f"task {task_id} escalonada para máquina {machine_id} ({start_time}s -> {end_time}s)")
+
+        task_data: Task | None = self.workflow.tasks.get(task_id)
+        if task_data is None:
+          continue
+
+        for child_id in self.workflow.tasks_children.get(task_id, []):
+          parents: Dict[str, set[str]] = self.workflow.tasks_parents
+          if all(task in self.completed_tasks for task in parents.get(child_id, [])):
+            if child_id not in self.ready_tasks:
+              self.ready_tasks.append(child_id)
+      else: 
+        if not self.ready_tasks and len(self.completed_tasks) < len(self.workflow.tasks):
+          self.log("No ready tasks, but workflow is not complete. Possible deadlock or missing dependencies.")
+          break
+
+    self.report()
+
+  def log(self, message):
+    print(message)
