@@ -20,8 +20,8 @@ parser.add_argument(
 args = parser.parse_args()
 
 logging.basicConfig(
-level=getattr(logging, args.log_level.upper()),
-handlers=[logging.StreamHandler(sys.stdout)],
+    level=getattr(logging, args.log_level.upper()),
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 
 d = os.path.dirname(os.path.realpath(__file__))
@@ -31,10 +31,6 @@ workflow: wfinstances.Instance = wfinstances.Instance(
   input_instance=path.joinpath("bwa-chameleon-small-001.json"), 
   logger=logging.getLogger(__name__)
 )
-
-total_tasks = len(workflow.workflow.tasks)
-
-logging.info(f"Total tasks: {total_tasks}")
 
 simulator = Simulator(workflow, logger=logging.getLogger(__name__))
 scheduler = FIFOScheduler()

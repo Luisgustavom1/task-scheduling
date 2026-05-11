@@ -17,11 +17,22 @@ class Simulator:
     self.completed_tasks = {} # task_id -> end_time
     self.history = []
 
-    self.start_task: Task
-    self.exit_task: Task
+    self.start_task: Task = self.build_artifical_tasks("artifical_entry_point")
+    self.exit_task: Task = self.build_artifical_tasks("artifical_exit_point")
 
     self.normalizeStartTasks()
     self.normalizeExitTasks()
+
+  def build_artifical_tasks(self, id: str) -> Task:
+    return Task(
+      task_id=id,
+      name=id,
+      runtime=0,
+      cores=0,
+      input_files=[],
+      output_files=[],
+      machines=[]
+    )
 
   def normalizeStartTasks(self):
     """
@@ -38,24 +49,15 @@ class Simulator:
         start_tasks.append(task)
 
     if len(start_tasks) > 1:
-      entry_point = Task(
-        task_id="entry_point",
-        name="entry_point",
-        runtime=0,
-        cores=0,
-        input_files=[],
-        output_files=[],
-        machines=[]
-      )
-
-      self.start_task = entry_point
-
+      entry_point = self.start_task
       self.workflow.add_task(entry_point)
       self.workflow.tasks_children[entry_point.name] = set()
       for task in start_tasks:
         self.workflow.add_edge(entry_point.name, task)
         self.workflow.tasks_children[entry_point.name].add(task)
         self.workflow.tasks_parents[task].add(entry_point.name)
+    else:
+      self.start_task = self.workflow.tasks[start_tasks[0]]
 
   def normalizeExitTasks(self):
     """
@@ -72,24 +74,15 @@ class Simulator:
         exit_tasks.append(task)
 
     if len(exit_tasks) > 1:
-      artificial_exit_task = Task(
-        task_id="artificial_exit_task",
-        name="artificial_exit_task",
-        runtime=0,
-        cores=0,
-        input_files=[],
-        output_files=[],
-        machines=[]
-      )
-
-      self.exit_task = artificial_exit_task
-
+      artificial_exit_task = self.exit_task
       self.workflow.add_task(artificial_exit_task)
       self.workflow.tasks_parents[artificial_exit_task.name] = set()
       for task in exit_tasks:
         self.workflow.add_edge(task, artificial_exit_task.name)
         self.workflow.tasks_parents[artificial_exit_task.name].add(task)
         self.workflow.tasks_children[task].add(artificial_exit_task.name)
+    else:
+      self.exit_task = self.workflow.tasks[exit_tasks[0]]
 
   def report(self):
     makespan = max(h['end'] for h in self.history) if self.history else 0
@@ -152,6 +145,9 @@ class Simulator:
     self.report()
 
   def calculate_task_runtime(self, task: Task, processor: Processor) -> float:
+    if task.task_id.startswith("artificial_"):
+      return 0.0
+    
     if task.machines is None or len(task.machines) == 0 or len(task.machines) > 1:
       self.logger.warning(f"Task {task.task_id} has no specific machine or multiple machines on execution specs, using default runtime.")
       return task.runtime
