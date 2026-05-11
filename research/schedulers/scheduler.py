@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Union
-from collections import deque
+from typing import Union
 
 from wfcommons import common, wfinstances
 
@@ -14,11 +13,5 @@ class Processor(common.Machine):
 
 class Scheduler(ABC):
   @abstractmethod
-  def schedule(
-    self,
-    ready_tasks: deque,
-    processors: Dict[str, Processor],
-    completed_tasks: Dict[str, float],
-    workflow: Workflow
-  ) -> tuple[int, str, float]:
+  def schedule(self) -> tuple[int, str, float]:
     pass

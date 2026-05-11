@@ -4,10 +4,11 @@ from typing import Dict, cast
 from schedulers.scheduler import Instance, Scheduler, Task, Workflow, Processor
 
 class Simulator:
-  def __init__(self, instance: Instance, logger: logging.Logger | None = None):
+  def __init__(self, instance: Instance, bandwidth: float, logger: logging.Logger | None = None):
     self.instance: Instance = instance
     self.workflow: Workflow = instance.workflow
     self.logger = logger or logging.getLogger(__name__)
+    self.bandwidth = bandwidth
 
     self.ready_tasks = deque()
     self.processors: Dict[str, Processor] = cast(Dict[str, Processor], instance.machines)
@@ -17,8 +18,8 @@ class Simulator:
     self.completed_tasks = {} # task_id -> end_time
     self.history = []
 
-    self.start_task: Task = self.build_artifical_tasks("artifical_entry_point")
-    self.exit_task: Task = self.build_artifical_tasks("artifical_exit_point")
+    self.start_task: Task = self.build_artifical_tasks("artificial_entry_point")
+    self.exit_task: Task = self.build_artifical_tasks("artificial_exit_point")
 
     self.normalizeStartTasks()
     self.normalizeExitTasks()
@@ -102,12 +103,7 @@ class Simulator:
         self.logger.warning("No ready tasks, but workflow is not complete. Possible deadlock or missing dependencies.")
         break
 
-      action = scheduler.schedule(
-        self.ready_tasks,
-        self.processors,
-        self.completed_tasks,
-        self.workflow
-      )
+      action = scheduler.schedule()
 
       task_id, machine_id, task_ready_time = action
 

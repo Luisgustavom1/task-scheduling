@@ -32,7 +32,7 @@ workflow: wfinstances.Instance = wfinstances.Instance(
   logger=logging.getLogger(__name__)
 )
 
-simulator = Simulator(workflow, logger=logging.getLogger(__name__))
-scheduler = FIFOScheduler()
+simulator = Simulator(workflow, bandwidth=1e6, logger=logging.getLogger(__name__))
+scheduler = FIFOScheduler(simulator)
 
 simulator.start(scheduler)

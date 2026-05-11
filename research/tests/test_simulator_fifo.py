@@ -88,12 +88,12 @@ def test_simulator_fifo_simple_chain():
     sim_mod = importlib.import_module('simulator')
     Simulator = sim_mod.Simulator
 
-    sim = Simulator(inst, logger=logging.getLogger("test_simulator"))
+    sim = Simulator(inst, 1e6 , logger=logging.getLogger("test_simulator"))
 
     # Simulator expects a start task; set it to t1
     sim.start_task = t1
 
-    scheduler = FIFOScheduler()
+    scheduler = FIFOScheduler(sim=sim)
 
     sim.start(scheduler)
 
@@ -123,10 +123,10 @@ def test_simulator_respects_processor_availability():
     inst = InstanceFake(workflow=wf, machines=machines)
 
     import importlib
-    sim = importlib.import_module('simulator').Simulator(inst)
+    sim = importlib.import_module('simulator').Simulator(inst, 1e6 )
     sim.start_task = t1
 
-    scheduler = FIFOScheduler()
+    scheduler = FIFOScheduler(sim=sim)
     sim.start(scheduler)
 
     # ensure tasks executed and recorded
@@ -161,10 +161,10 @@ def test_diamond_dependency_pattern():
     inst = InstanceFake(workflow=wf, machines=machines)
 
     Simulator = importlib.import_module('simulator').Simulator
-    sim = Simulator(inst)
+    sim = Simulator(inst, 1e6 )
     sim.start_task = t1
 
-    scheduler = FIFOScheduler()
+    scheduler = FIFOScheduler(sim=sim)
     sim.start(scheduler)
 
     # All 4 tasks should complete
@@ -190,10 +190,10 @@ def test_single_task_workflow():
     inst = InstanceFake(workflow=wf, machines=machines)
 
     Simulator = importlib.import_module('simulator').Simulator
-    sim = Simulator(inst)
+    sim = Simulator(inst, 1e6 )
     # Let simulator handle start_task via normalization
 
-    scheduler = FIFOScheduler()
+    scheduler = FIFOScheduler(sim=sim)
     sim.start(scheduler)
 
     # The real task t1 should execute with proper runtime
@@ -219,10 +219,10 @@ def test_multiple_independent_tasks():
     inst = InstanceFake(workflow=wf, machines=machines)
 
     Simulator = importlib.import_module('simulator').Simulator
-    sim = Simulator(inst, logger=logging.getLogger("test"))
+    sim = Simulator(inst, 1e6 , logger=logging.getLogger("test"))
     # Let simulator create entry_point for multiple start tasks
 
-    scheduler = FIFOScheduler()
+    scheduler = FIFOScheduler(sim=sim)
     sim.start(scheduler)
 
     # All 3 tasks should complete
@@ -246,10 +246,10 @@ def test_processor_speed_affects_runtime():
     inst = InstanceFake(workflow=wf, machines=machines)
 
     Simulator = importlib.import_module('simulator').Simulator
-    sim = Simulator(inst)
+    sim = Simulator(inst, 1e6 )
     # Let simulator handle start task
 
-    scheduler = FIFOScheduler()
+    scheduler = FIFOScheduler(sim=sim)
     sim.start(scheduler)
 
     # Task should execute with its base runtime when speeds match
@@ -275,10 +275,10 @@ def test_makespan_calculation():
     inst = InstanceFake(workflow=wf, machines=machines)
 
     Simulator = importlib.import_module('simulator').Simulator
-    sim = Simulator(inst)
+    sim = Simulator(inst, 1e6 )
     # Let simulator handle
 
-    scheduler = FIFOScheduler()
+    scheduler = FIFOScheduler(sim=sim)
     sim.start(scheduler)
 
     makespan = max(h['end'] for h in sim.history)
@@ -308,10 +308,10 @@ def test_dependencies_prevent_early_execution():
     inst = InstanceFake(workflow=wf, machines=machines)
 
     Simulator = importlib.import_module('simulator').Simulator
-    sim = Simulator(inst, logger=logging.getLogger("test"))
+    sim = Simulator(inst, 1e6 , logger=logging.getLogger("test"))
     # Let simulator create entry_point
 
-    scheduler = FIFOScheduler()
+    scheduler = FIFOScheduler(sim=sim)
     sim.start(scheduler)
 
     t1_end = sim.completed_tasks['t1']
@@ -338,9 +338,9 @@ def test_real_wfcommons_workflow():
     inst = wfinstances.Instance(input_instance=str(dag_path))
     
     Simulator = importlib.import_module('simulator').Simulator
-    sim = Simulator(inst, logger=logging.getLogger("test"))
+    sim = Simulator(inst, 1e6 , logger=logging.getLogger("test"))
 
-    scheduler = FIFOScheduler()
+    scheduler = FIFOScheduler(sim=sim)
     sim.start(scheduler)
 
     # Basic sanity checks
@@ -382,10 +382,10 @@ def test_identical_task_runtimes():
     inst = InstanceFake(workflow=wf, machines=machines)
 
     Simulator = importlib.import_module('simulator').Simulator
-    sim = Simulator(inst)
+    sim = Simulator(inst, 1e6 )
     # Let simulator handle
 
-    scheduler = FIFOScheduler()
+    scheduler = FIFOScheduler(sim=sim)
     sim.start(scheduler)
 
     # With 4 tasks each taking 5s in series: total should be 20s
@@ -416,10 +416,10 @@ def test_fifo_order_respected():
     inst = InstanceFake(workflow=wf, machines=machines)
 
     Simulator = importlib.import_module('simulator').Simulator
-    sim = Simulator(inst, logger=logging.getLogger("test"))
+    sim = Simulator(inst, 1e6 , logger=logging.getLogger("test"))
     # Let simulator handle
 
-    scheduler = FIFOScheduler()
+    scheduler = FIFOScheduler(sim=sim)
     sim.start(scheduler)
 
     # Verify all 3 tasks executed
