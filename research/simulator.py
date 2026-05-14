@@ -10,7 +10,7 @@ class Simulator:
     self.logger = logger or logging.getLogger(__name__)
     self.bandwidth = bandwidth
 
-    self.ready_tasks = deque()
+    self.ready_tasks: deque[str] = deque()
     self.processors: Dict[str, Processor] = cast(Dict[str, Processor], instance.machines)
     for processor in self.processors.values():
       setattr(processor, "available_at", 0.0)
@@ -20,9 +20,11 @@ class Simulator:
 
     self.start_task: Task = self.build_artifical_tasks("artificial_entry_point")
     self.exit_task: Task = self.build_artifical_tasks("artificial_exit_point")
+    self.execution_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> runtime
 
     self.normalizeStartTasks()
     self.normalizeExitTasks()
+    self.buildExecutionCost()
 
   def build_artifical_tasks(self, id: str) -> Task:
     return Task(
@@ -84,6 +86,13 @@ class Simulator:
         self.workflow.tasks_children[task].add(artificial_exit_task.name)
     else:
       self.exit_task = self.workflow.tasks[exit_tasks[0]]
+
+  def buildExecutionCost(self):
+    for task_id, task in self.workflow.tasks.items():
+      self.execution_cost[task_id] = {}
+      for machine_id, processor in self.processors.items():
+        runtime = self.calculate_task_runtime(task, processor)
+        self.execution_cost[task_id][machine_id] = runtime
 
   def report(self):
     makespan = max(h['end'] for h in self.history) if self.history else 0

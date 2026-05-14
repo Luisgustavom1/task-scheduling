@@ -8,7 +8,7 @@ class FIFOScheduler(Scheduler):
     self.name = "FIFO"
     self.sim = sim
 
-  def schedule(self) -> tuple[int, str, float]:
+  def schedule(self) -> tuple[str, str, float]:
     processors = self.sim.processors
 
     task_id = self.sim.ready_tasks.popleft()
