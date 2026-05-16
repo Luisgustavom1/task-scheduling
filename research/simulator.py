@@ -21,6 +21,7 @@ class Simulator:
     self.start_task: Task = self.build_artifical_tasks("artificial_entry_point")
     self.exit_task: Task = self.build_artifical_tasks("artificial_exit_point")
     self.execution_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> runtime
+    self.task_allocation: Dict[str, str] = {} # task_id -> machine_id
 
     self.normalizeStartTasks()
     self.normalizeExitTasks()

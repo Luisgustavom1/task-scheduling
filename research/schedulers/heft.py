@@ -1,5 +1,4 @@
-from typing import Dict, cast
-
+from typing import Dict
 from schedulers.scheduler import Scheduler, Processor, Task
 from simulator import Simulator
 
@@ -7,69 +6,83 @@ class HEFT(Scheduler):
   def __init__(self, simulator: Simulator):
     self.name = "HEFT"
     self.sim = simulator
+    self.up_ranks: Dict[str, float] = {}
 
   def schedule(self) -> tuple[str, str, float]:
-    CP = self.calc_upward_rank(self.sim.start_task)
-    CPN = self.sim.start_task
+    if not self.up_ranks:
+      for task_id in self.sim.workflow.tasks:
+        self.calc_upward_rank(self.sim.workflow.tasks[task_id])
 
-    for task_id in self.sim.workflow.tasks:
-      task: Task = self.sim.workflow.tasks[task_id]
-      if (self.calc_downward_rank(task) + self.calc_upward_rank(task)) == CP:
-        CPN = task
+    # tasks with all parents completed and not yet scheduled
+    unescheduled_tasks = [
+      self.sim.workflow.tasks[tid] for tid in self.sim.workflow.tasks 
+      if tid not in self.sim.completed_tasks and 
+      all(p in self.sim.completed_tasks for p in self.sim.workflow.tasks_parents[tid])
+    ]
 
-    queue: list[Task] = [self.sim.workflow.tasks[task_id] for task_id in self.sim.workflow.tasks if task_id not in self.sim.completed_tasks and all(pred_id in self.sim.completed_tasks for pred_id in self.sim.workflow.tasks_parents[task_id])]
-    queue = sorted(queue, key=lambda task: self.calc_downward_rank(task) + self.calc_upward_rank(task))
-    selected_task: Task = queue.pop(0)
+    # select task with highest upward rank
+    selected_task = max(unescheduled_tasks, key=lambda t: self.up_ranks[t.task_id])
+    task_id = selected_task.task_id
 
-    if selected_task.task_id == CPN.task_id:
-      best_processor = min(self.sim.processors, key=lambda p: self.sim.processors[p].available_at)
-    else:
-      processors_cost = self.sim.execution_cost[selected_task.task_id]
-      best_processor = min(self.sim.processors, key=lambda p: self.sim.processors[p].available_at + processors_cost.get(p, 0))
+    best_processor = list(self.sim.processors.keys())[0]
+    min_eft = float('inf')
+    best_est = 0
 
-    parents: Dict[str, set[str]] = self.sim.workflow.tasks_parents[selected_task.task_id]
-    est = 0
-    if parents:
-      est = max(self.sim.completed_tasks[p_id] + self.communication_cost(p_id, selected_task.task_id) for p_id in parents)
+    for p_id in self.sim.processors:
+      execution_time = self.sim.execution_cost[task_id].get(p_id, 0)
 
-    return selected_task.task_id, best_processor, est
-  
-  # rank (ni) = avg cost of a node ni + max(avg communication cost of a edge (i,j) + rank(nj)) for nj in successors of ni
-  def calc_upward_rank(self, task: Task):
-    task_id = task.task_id
-    return self.avg_execution_cost(task) + max(
-      (self.communication_cost(task_id, succ_id) + self.calc_upward_rank(self.sim.workflow.tasks[succ_id]) for succ_id in self.sim.workflow.tasks_children[task_id]),
-      default=0
-    )
+      est = self.calc_est(task_id, p_id)
+      eft = est + execution_time
 
-  # rank (ni) = max(avg communication cost of a edge (j,i) + avg cost of a node ni + rank(nj)) for nj in parents of ni
-  def calc_downward_rank(self, task: Task):
-    parents = self.sim.workflow.tasks_parents[task.task_id]
-    if not parents:
-      return 0
+      # schedule task to the processor that minimizes EFT
+      if eft < min_eft:
+        min_eft = eft
+        best_processor = p_id
+        best_est = est
 
-    return max(
-      self.calc_downward_rank(self.sim.workflow.tasks[pred_id]) +
-      self.avg_execution_cost(task) +
-      self.communication_cost(pred_id, task.task_id)
-      for pred_id in parents
-    )
+    return task_id, best_processor, best_est
+
+  def calc_upward_rank(self, task: Task) -> float:
+    if task.task_id in self.up_ranks:
+      return self.up_ranks[task.task_id]
+
+    avg_execution_cost = self.avg_execution_cost(task)
+    
+    max_succ_cost = 0
+    for succ_id in self.sim.workflow.tasks_children[task.task_id]:
+      comm_cost = self.communication_cost(task.task_id, succ_id) 
+      upward_rank = self.calc_upward_rank(self.sim.workflow.tasks[succ_id])
+      max_succ_cost = max(max_succ_cost, comm_cost + upward_rank)
+
+    self.up_ranks[task.task_id] = avg_execution_cost + max_succ_cost
+    return self.up_ranks[task.task_id]
 
   def avg_execution_cost(self, task: Task) -> float:
-    processors = self.sim.instance.machines
-    total_runtime = sum(self.sim.execution_cost[task.task_id].get(p.name, 0) for p in processors.values())
-    avg_runtime = total_runtime / len(processors)
-    return avg_runtime
+    costs = self.sim.execution_cost[task.task_id].values()
+    return sum(costs) / len(costs) if costs else 0
 
   def communication_cost(self, task_id_i: str, task_id_j: str) -> float:
     task_i: Task = self.sim.workflow.tasks[task_id_i]
-    task_j = self.sim.workflow.tasks[task_id_j]
+    task_j: Task = self.sim.workflow.tasks[task_id_j]
+    
+    shared_files = set(task_i.output_files) & set(task_j.input_files)
+    total_size = sum(f.size for f in shared_files)
+    
+    return total_size / self.sim.bandwidth
+  
+  def calc_est(self, task_id: str, processor_id: str) -> float:
+    data_ready_time = 0
+    for p_id_parent in self.sim.workflow.tasks_parents[task_id]:
+      parent_finish = self.sim.completed_tasks[p_id_parent]
 
-    files_data = set(task_i.output_files) & set(task_j.input_files)
-    if len(files_data) == 0:
-      return 0.0
+      if not parent_finish:
+        raise ValueError(f"Parent task {p_id_parent} of task {task_id} has not been completed yet.")
 
-    files_size = sum(f.size for f in files_data)
+      comm_cost = 0
+      # communication cost is 0 if parent and child are on the same processor
+      if self.sim.task_allocation.get(p_id_parent) != processor_id:
+        comm_cost = self.communication_cost(p_id_parent, task_id)
+      
+      data_ready_time = max(data_ready_time, parent_finish + comm_cost)
 
-    communication_time = files_size / self.sim.bandwidth
-    return communication_time
+    return max(self.sim.processors[processor_id].available_at, data_ready_time)
