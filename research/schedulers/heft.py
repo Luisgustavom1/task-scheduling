@@ -75,7 +75,7 @@ class HEFT(Scheduler):
     for p_id_parent in self.sim.workflow.tasks_parents[task_id]:
       parent_finish = self.sim.completed_tasks[p_id_parent]
 
-      if not parent_finish:
+      if parent_finish is None:
         raise ValueError(f"Parent task {p_id_parent} of task {task_id} has not been completed yet.")
 
       comm_cost = 0
