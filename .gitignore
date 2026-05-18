@@ -3,3 +3,7 @@ ve/**
 **/fits/**
 **/__pycache__/**
 wfcommons-schema.json
+
+.cursor
+.vscode
+.specs

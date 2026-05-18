@@ -1,0 +1,10 @@
+{
+  "stubPath": "typings",
+  "extraPaths": [
+    "research",
+    "genetic-algorithms",
+    "wfcommons"
+  ],
+  "venvPath": ".",
+  "venv": "ve"
+}
