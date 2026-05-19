@@ -103,10 +103,13 @@ class Simulator:
     self.logger.info(f"Makespan: {makespan}")
     self.logger.info(f"Throughput: {throughput:.2f} tasks/s")
 
-  def start(self, scheduler: Scheduler):
+  def start(self, scheduler: Scheduler, visualizer=None):
     self.logger.info(f"Starting scheduler...")
     
     self.ready_tasks.append(self.start_task.task_id)
+
+    if visualizer is not None and hasattr(visualizer, "attach"):
+      visualizer.attach(self)
 
     while len(self.completed_tasks) < len(self.workflow.tasks):
       if not self.ready_tasks:
@@ -139,6 +142,15 @@ class Simulator:
         "end": end_time
       })
 
+      if visualizer is not None and hasattr(visualizer, "on_task_scheduled"):
+        visualizer.on_task_scheduled(
+          task=task,
+          processor_id=machine_id,
+          start_time=start_time,
+          end_time=end_time,
+          ready_time=task_ready_time,
+        )
+
       self.logger.debug(f"task {task_id} escalonada para máquina {machine_id} ({start_time}s -> {end_time}s)")
 
       for child_id in self.workflow.tasks_children.get(task_id, []):
@@ -150,6 +162,9 @@ class Simulator:
             self.ready_tasks.append(child_id)
 
     self.report()
+
+    if visualizer is not None and hasattr(visualizer, "finalize"):
+      visualizer.finalize()
 
   def calculate_task_runtime(self, task: Task, processor: Processor) -> float:
     if task.task_id.startswith("artificial_"):

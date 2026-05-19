@@ -1,7 +1,5 @@
 import argparse
 import logging
-from os import path
-import os
 import pathlib
 import sys
 
@@ -9,6 +7,7 @@ from simulator import Simulator
 from wfcommons import wfinstances
 from schedulers.fifo import FIFOScheduler
 from schedulers.heft import HEFT
+from visualizer import SchedulerVisualizer
 
 parser = argparse.ArgumentParser(description="Run the task scheduler.")
 parser.add_argument("--silence", action="store_true", help="Disable logging for the scheduler.", default=False)
@@ -24,6 +23,13 @@ parser.add_argument(
   choices=["FIFO", "HEFT"],
   help="Select scheduling algorithm.",
 )
+parser.add_argument(
+  "--visualize",
+  action="store_true",
+  default=False,
+  help="Show a live visualization of processors and tasks while scheduling.",
+)
+
 args = parser.parse_args()
 
 logging.basicConfig(
@@ -31,11 +37,11 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 
-d = os.path.dirname(os.path.realpath(__file__))
-path = pathlib.Path(d, 'dag-instances', 'wfcommons')
+repo_root = pathlib.Path(__file__).resolve().parent
+dag_root = repo_root / 'dag-instances' / 'wfcommons'
 
 workflow: wfinstances.Instance = wfinstances.Instance(
-  input_instance=path.joinpath("bwa-chameleon-small-001.json"), 
+  input_instance=dag_root.joinpath("bwa-chameleon-small-001.json"), 
   logger=logging.getLogger(__name__)
 )
 
@@ -49,4 +55,12 @@ scheduler_map = {
 scheduler_class = scheduler_map[args.scheduler]
 scheduler = scheduler_class(simulator)
 
-simulator.start(scheduler)
+visualizer = None
+if args.visualize:
+  visualizer = SchedulerVisualizer(
+    title=f"Task Scheduling - {args.scheduler}",
+    animate=True,
+    frame_delay=0.03,
+  )
+
+simulator.start(scheduler, visualizer=visualizer)
