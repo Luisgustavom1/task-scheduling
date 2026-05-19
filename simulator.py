@@ -131,6 +131,7 @@ class Simulator:
 
       processor_to_run.available_at = end_time
       self.completed_tasks[task_id] = end_time
+      self.task_allocation[task_id] = machine_id
       self.history.append({
         "task_id": task_id,
         "processor_id": machine_id,
@@ -163,3 +164,15 @@ class Simulator:
       return task.runtime
     
     return (task.runtime * max(processor.cpu_speed, 1)) / max(machine_runner.cpu_speed, 1)
+  
+  def avg_communication_cost(self, task_id_i: str, task_id_j: str, possible_processor_j: str | None = None) -> float:
+    if possible_processor_j is not None and self.task_allocation.get(task_id_i) == possible_processor_j:
+      return 0
+
+    task_i: Task = self.workflow.tasks[task_id_i]
+    task_j: Task = self.workflow.tasks[task_id_j]
+    
+    shared_files = set(task_i.output_files) & set(task_j.input_files)
+    total_size = sum(f.size for f in shared_files)
+    
+    return total_size / self.bandwidth
