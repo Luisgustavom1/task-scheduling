@@ -20,12 +20,16 @@ class Simulator:
 
     self.start_task: Task = self.build_artifical_tasks("artificial_entry_point")
     self.exit_task: Task = self.build_artifical_tasks("artificial_exit_point")
-    self.execution_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> runtime
+    
     self.task_allocation: Dict[str, str] = {} # task_id -> machine_id
+    
+    self.execution_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> runtime
+    self.communication_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> runtime
 
     self.normalizeStartTasks()
     self.normalizeExitTasks()
     self.buildExecutionCost()
+    self.buildCommunicationCost()
 
   def build_artifical_tasks(self, id: str) -> Task:
     return Task(
@@ -94,6 +98,17 @@ class Simulator:
       for machine_id, processor in self.processors.items():
         runtime = self.calculate_task_runtime(task, processor)
         self.execution_cost[task_id][machine_id] = runtime
+
+  def buildCommunicationCost(self):
+    for task_id_i, task_i in self.workflow.tasks.items():
+      self.communication_cost[task_id_i] = {}
+      for task_id_j in self.workflow.tasks_children.get(task_id_i, []):
+        task_j: Task = self.workflow.tasks[task_id_j]
+
+        shared_files = set(task_i.output_files) & set(task_j.input_files)
+        total_size = sum(f.size for f in shared_files)
+        # maybe this calculation of communication cost is wrong
+        self.communication_cost[task_id_i][task_id_j] = total_size / self.bandwidth
 
   def report(self):
     makespan = max(h['end'] for h in self.history) if self.history else 0
@@ -184,10 +199,4 @@ class Simulator:
     if possible_processor_j is not None and self.task_allocation.get(task_id_i) == possible_processor_j:
       return 0
 
-    task_i: Task = self.workflow.tasks[task_id_i]
-    task_j: Task = self.workflow.tasks[task_id_j]
-    
-    shared_files = set(task_i.output_files) & set(task_j.input_files)
-    total_size = sum(f.size for f in shared_files)
-    
-    return total_size / self.bandwidth
+    return self.communication_cost.get(task_id_i, {}).get(task_id_j, 0.0)
