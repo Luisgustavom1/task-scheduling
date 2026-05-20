@@ -3,6 +3,7 @@ import logging
 import pathlib
 import sys
 
+from schedulers.peft import PEFT
 from simulator import Simulator
 from wfcommons import wfinstances
 from schedulers.fifo import FIFOScheduler
@@ -20,7 +21,7 @@ parser.add_argument(
 parser.add_argument(
   "--scheduler",
   default="FIFO",
-  choices=["FIFO", "HEFT"],
+  choices=["FIFO", "HEFT", "PEFT"],
   help="Select scheduling algorithm.",
 )
 parser.add_argument(
@@ -51,6 +52,7 @@ simulator = Simulator(workflow, bandwidth=1e6, logger=logging.getLogger(__name__
 scheduler_map = {
   "FIFO": FIFOScheduler,
   "HEFT": HEFT,
+  "PEFT": PEFT,
 }
 scheduler_class = scheduler_map[args.scheduler]
 scheduler = scheduler_class(simulator)

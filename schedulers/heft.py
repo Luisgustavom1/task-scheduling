@@ -50,7 +50,7 @@ class HEFT(Scheduler):
     
     max_succ_cost = 0
     for succ_id in self.sim.workflow.tasks_children[task.task_id]:
-      comm_cost = self.sim.avg_communication_cost(task.task_id, succ_id) 
+      comm_cost = self.sim.calc_communication_cost(task.task_id, succ_id) 
       upward_rank = self.calc_upward_rank(self.sim.workflow.tasks[succ_id])
       max_succ_cost = max(max_succ_cost, comm_cost + upward_rank)
 
@@ -69,7 +69,7 @@ class HEFT(Scheduler):
       if parent_finish is None:
         raise ValueError(f"Parent task {p_id_parent} of task {task_id} has not been completed yet.")
 
-      comm_cost = self.sim.avg_communication_cost(p_id_parent, task_id, processor_id)
+      comm_cost = self.sim.calc_communication_cost(p_id_parent, task_id, processor_id)
       data_ready_time = max(data_ready_time, parent_finish + comm_cost)
 
     return max(self.sim.processors[processor_id].available_at, data_ready_time)

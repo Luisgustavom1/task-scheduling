@@ -195,7 +195,7 @@ class Simulator:
     
     return (task.runtime * max(processor.cpu_speed, 1)) / max(machine_runner.cpu_speed, 1)
   
-  def avg_communication_cost(self, task_id_i: str, task_id_j: str, possible_processor_j: str | None = None) -> float:
+  def calc_communication_cost(self, task_id_i: str, task_id_j: str, possible_processor_j: str | None = None) -> float:
     if possible_processor_j is not None and self.task_allocation.get(task_id_i) == possible_processor_j:
       return 0
 
