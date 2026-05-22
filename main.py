@@ -30,6 +30,11 @@ parser.add_argument(
   default=False,
   help="Show a live visualization of processors and tasks while scheduling.",
 )
+parser.add_argument(
+  "--dag-path",
+  default="dag-instances/wfcommons/bwa-chameleon-small-001.json",
+  help="Path to the DAG JSON file to load. Relative paths are resolved from the repository root.",
+)
 
 args = parser.parse_args()
 
@@ -39,10 +44,15 @@ logging.basicConfig(
 )
 
 repo_root = pathlib.Path(__file__).resolve().parent
-dag_root = repo_root / 'dag-instances' / 'wfcommons'
+dag_path = pathlib.Path(args.dag_path)
+if not dag_path.is_absolute():
+  dag_path = repo_root / dag_path
+
+if not dag_path.exists():
+  parser.error(f"DAG file not found: {dag_path}")
 
 workflow: wfinstances.Instance = wfinstances.Instance(
-  input_instance=dag_root.joinpath("bwa-chameleon-small-001.json"), 
+  input_instance=dag_path,
   logger=logging.getLogger(__name__)
 )
 
