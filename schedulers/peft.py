@@ -11,7 +11,7 @@ class PEFT(Scheduler):
   def schedule(self) -> tuple[str, str, float]:
     if not self.oct_table:
       for task_id in self.sim.workflow.tasks:
-        self.calc_rank_oct(task_id)
+        self.rank_oct(task_id)
 
     # tasks with all parents completed and not yet scheduled
     unescheduled_tasks = [
@@ -55,7 +55,7 @@ class PEFT(Scheduler):
       raise ValueError(f"task {ni} has not been completed yet.")
     return aft
 
-  def calc_rank_oct(self, ti: str) -> float:
+  def rank_oct(self, ti: str) -> float:
     if ti in self.oct_table:
       return self.oct_table[ti]
 
@@ -73,7 +73,7 @@ class PEFT(Scheduler):
       min_oct = float('inf')
       for pw in self.sim.processors:
         communication_cost = 0 if pw == pk else self.sim.communication_cost[ti].get(tj, 0)
-        oct = self.calc_rank_oct(tj) + self.sim.execution_cost[tj].get(pw, 0) + communication_cost
+        oct = self.rank_oct(tj) + self.sim.execution_cost[tj].get(pw, 0) + communication_cost
         min_oct = min(min_oct, oct)
 
       max_oct = max(max_oct, min_oct)
