@@ -58,7 +58,7 @@ class PEFT(Scheduler):
   def calc_rank_oct(self, ti: str) -> float:
     if ti in self.oct_table:
       return self.oct_table[ti]
-    
+
     sum = 0
     for pk in self.sim.processors:
       sum += self.calc_oct(ti, pk)
@@ -70,11 +70,12 @@ class PEFT(Scheduler):
   def calc_oct(self, ti: str, pk: str) -> float:
     max_oct = 0
     for tj in self.sim.workflow.tasks_children[ti]:
-      oct = min(
-        self.calc_rank_oct(tj) + self.sim.execution_cost[tj].get(pw, 0) + 0 if pw == pk else self.sim.communication_cost[ti].get(pw, 0)
-        for pw in self.sim.processors
-      )
+      min_oct = float('inf')
+      for pw in self.sim.processors:
+        communication_cost = 0 if pw == pk else self.sim.communication_cost[ti].get(tj, 0)
+        oct = self.calc_rank_oct(tj) + self.sim.execution_cost[tj].get(pw, 0) + communication_cost
+        min_oct = min(min_oct, oct)
 
-      max_oct = max(max_oct, oct)
+      max_oct = max(max_oct, min_oct)
 
     return max_oct
