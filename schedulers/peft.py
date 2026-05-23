@@ -59,11 +59,9 @@ class PEFT(Scheduler):
     if ti in self.oct_table:
       return self.oct_table[ti]
 
-    sum = 0
-    for pk in self.sim.processors:
-      sum += self.calc_oct(ti, pk)
+    oct_sum = sum(self.calc_oct(ti, pk) for pk in self.sim.processors)
 
-    self.oct_table[ti] = sum / len(self.sim.processors) if self.sim.processors else 0
+    self.oct_table[ti] = oct_sum / len(self.sim.processors) if self.sim.processors else 0
 
     return self.oct_table[ti]
   
