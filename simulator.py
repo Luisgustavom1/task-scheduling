@@ -24,12 +24,14 @@ class Simulator:
     self.task_allocation: Dict[str, str] = {} # task_id -> machine_id
     
     self.execution_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> runtime
+    self.avg_execution_cost: Dict[str, float] = {} # task_id -> average runtime across all machines
     self.communication_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> runtime
 
     self.normalizeStartTasks()
     self.normalizeExitTasks()
     self.buildExecutionCost()
     self.buildCommunicationCost()
+    self.buildAvgExecutionCost()
 
   def build_artifical_tasks(self, id: str) -> Task:
     return Task(
@@ -109,6 +111,11 @@ class Simulator:
         total_size = sum(f.size for f in shared_files)
         # maybe this calculation of communication cost is wrong
         self.communication_cost[task_id_i][task_id_j] = total_size / self.bandwidth
+  
+  def buildAvgExecutionCost(self):
+    for task_id in self.workflow.tasks:
+      costs = self.execution_cost[task_id].values()
+      self.avg_execution_cost[task_id] = sum(costs) / len(costs) if costs else 0
 
   def report(self):
     makespan = max(h['end'] for h in self.history) if self.history else 0

@@ -46,7 +46,7 @@ class HEFT(Scheduler):
     if task.task_id in self.up_ranks:
       return self.up_ranks[task.task_id]
 
-    avg_execution_cost = self.avg_execution_cost(task)
+    avg_execution_cost = self.sim.avg_execution_cost[task.task_id]
     
     max_succ_cost = 0
     for succ_id in self.sim.workflow.tasks_children[task.task_id]:
@@ -56,10 +56,6 @@ class HEFT(Scheduler):
 
     self.up_ranks[task.task_id] = avg_execution_cost + max_succ_cost
     return self.up_ranks[task.task_id]
-
-  def avg_execution_cost(self, task: Task) -> float:
-    costs = self.sim.execution_cost[task.task_id].values()
-    return sum(costs) / len(costs) if costs else 0
   
   def calc_est(self, task_id: str, processor_id: str) -> float:
     data_ready_time = 0
