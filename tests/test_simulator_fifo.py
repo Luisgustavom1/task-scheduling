@@ -10,6 +10,7 @@ from wfcommons.common.task import Task
 from wfcommons.common.machine import Machine
 from wfcommons import wfinstances
 from schedulers.fifo import FIFOScheduler
+from metrics import SimulationMetrics
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -419,6 +420,7 @@ def test_fifo_order_respected():
     sim = Simulator(inst, 1e6 , logger=logging.getLogger("test"))
     # Let simulator handle
 
+
     scheduler = FIFOScheduler(sim=sim)
     sim.start(scheduler)
 
@@ -426,3 +428,31 @@ def test_fifo_order_respected():
     assert 't1' in sim.completed_tasks
     assert 't2' in sim.completed_tasks
     assert 't3' in sim.completed_tasks
+
+
+def test_simulation_metrics_calculation():
+    class WorkflowStub:
+        def __init__(self):
+            self.tasks = {"t1": object(), "t2": object(), "t3": object()}
+
+    execution_cost = {
+        "t1": {"m1": 1.0, "m2": 2.0},
+        "t2": {"m1": 2.0, "m2": 4.0},
+        "t3": {"m1": 1.0, "m2": 3.0},
+    }
+
+    metrics = SimulationMetrics(
+        history=[
+            {"task_id": "t1", "start": 0.0, "end": 3.0},
+            {"task_id": "t2", "start": 3.0, "end": 5.0},
+            {"task_id": "t3", "start": 5.0, "end": 8.0},
+        ],
+        workflow=WorkflowStub(),
+        CP=["t1", "t2", "t3"],
+        execution_cost=execution_cost,
+    )
+
+    assert metrics.makespan() == 8.0
+    assert metrics.slr() == 2.0
+    assert metrics.throughput() == 3 / 8.0
+    assert metrics.CPmin == [("t1", 1.0), ("t2", 2.0), ("t3", 1.0)]

@@ -1,6 +1,8 @@
 from collections import deque
 import logging
 from typing import Dict, cast
+
+from metrics import SimulationMetrics
 from schedulers.scheduler import Instance, Scheduler, Task, Workflow, Processor
 
 class Simulator:
@@ -25,13 +27,15 @@ class Simulator:
     
     self.execution_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> runtime
     self.avg_execution_cost: Dict[str, float] = {} # task_id -> average runtime across all machines
-    self.communication_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> runtime
+    self.communication_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> cost
+    self.CP = [] # critical path tasks
 
     self.normalizeStartTasks()
     self.normalizeExitTasks()
     self.buildExecutionCost()
     self.buildCommunicationCost()
     self.buildAvgExecutionCost()
+    self.calcCP()
 
   def build_artifical_tasks(self, id: str) -> Task:
     return Task(
@@ -117,13 +121,45 @@ class Simulator:
       costs = self.execution_cost[task_id].values()
       self.avg_execution_cost[task_id] = sum(costs) / len(costs) if costs else 0
 
+  def calcCP(self):
+    tasks = [self.start_task.task_id]
+
+    while len(tasks) > 0:
+      task_id = tasks.pop(0)
+      self.CP.append(task_id)
+
+      children = self.workflow.tasks_children.get(task_id, [])
+      if len(children) == 0 and task_id != self.exit_task.task_id:
+        raise ValueError(f"Task {task_id} has no children but is not the exit task. Workflow may be malformed.")
+      
+      if len(children) == 0:
+        self.logger.debug(f"Task {task_id} is an exit task.")
+        continue
+
+      max_cost = -1
+      max_cost_child = None
+      for child_id in children:
+        for runtime in self.execution_cost[child_id].values():
+          cost = runtime + self.communication_cost.get(task_id, {}).get(child_id, 0)
+          if cost > max_cost:
+            max_cost = cost
+            max_cost_child = child_id
+
+      if not max_cost_child:
+        raise ValueError(f"Could not find child with max cost for task {task_id}")
+
+      tasks.append(max_cost_child)
+
+    self.logger.info(f"Critical path: {' -> '.join(self.CP)}")
+
   def report(self):
-    makespan = max(h['end'] for h in self.history) if self.history else 0
-    throughput = len(self.workflow.tasks) / (makespan or 1)
-    
-    self.logger.info("Scheduler finished.")
-    self.logger.info(f"Makespan: {makespan}")
-    self.logger.info(f"Throughput: {throughput:.2f} tasks/s")
+    metrics = SimulationMetrics(
+      history=self.history,
+      workflow=self.workflow,
+      CP=self.CP,
+      execution_cost=self.execution_cost,
+    )
+    metrics.log(self.logger)
 
   def start(self, scheduler: Scheduler, visualizer=None):
     self.logger.info(f"Starting scheduler...")
