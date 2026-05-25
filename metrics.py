@@ -5,8 +5,10 @@ from typing import Any
 class SimulationMetrics:
   history: list[dict[str, Any]]
   workflow: Any
+  # critical path
   CP: list[str]
   execution_cost: dict[str, dict[str, float]]
+  # Precompute minimum execution cost for critical path tasks
   CPmin: list[tuple[str, float]] = field(init=False, default_factory=list)
 
   def __post_init__(self):
