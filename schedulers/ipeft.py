@@ -4,7 +4,7 @@ from simulator import Simulator
 
 class IPEFT(Scheduler):
   def __init__(self, simulator: Simulator):
-    self.name = "PEFT"
+    self.name = "IPEFT"
     self.sim = simulator
     self.aest = {} # average earliest start time
     self.alst = {} # average latest start time
@@ -39,9 +39,13 @@ class IPEFT(Scheduler):
 
     return task_id, best_processor
   
-  def isCriticalNode(self, ni: str) -> bool:
+  # critical node
+  def cn(self, ni: str) -> bool:
     return self.calc_aest(ni) == self.calc_alst(ni)
   
+  def cnp(self, ni: str) -> bool:
+    return not self.cn(ni) and any(self.cn(nm) for nm in self.sim.workflow.tasks_children[ni])
+
   def calc_cnct(self, vi: str, pk: str) -> float:
     key = (vi, pk)
     if key in self.cnct:
@@ -52,15 +56,14 @@ class IPEFT(Scheduler):
       self.cnct[key] = 0.0
       return 0.0
 
-    critical_successors = [vj for vj in successors if self.isCriticalNode(vj)]
+    critical_successors = [vj for vj in successors if self.cn(vj)]
     if critical_successors:
       successors = critical_successors
 
     max_cnct = 0.0
     for vj in successors:
-      comm_cost = self.sim.communication_cost.get(vi, {}).get(vj, 0.0)
       min_cost = min(
-        self.calc_cnct(vj, pm) + self.sim.execution_cost[vj].get(pm, 0.0) + comm_cost
+        self.calc_cnct(vj, pm) + self.sim.execution_cost[vj].get(pm, 0.0) + self.sim.avg_communication_cost(vi, pk, vj, pm)
         for pm in self.sim.processors
       )
       max_cnct = max(max_cnct, min_cost)
@@ -74,7 +77,7 @@ class IPEFT(Scheduler):
     return est + execution_time
 
   def calc_eft_cnct(self, vi: str, pj: str) -> float:
-    if self.isCriticalNode(vi):
+    if self.cn(vi):
       return self.calc_eft(vi, pj)
     
     return self.calc_eft(vi, pj) + self.calc_cnct(vi, pj)

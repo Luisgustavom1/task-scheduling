@@ -246,6 +246,12 @@ class Simulator:
 
     return self.communication_cost.get(task_id_i, {}).get(task_id_j, 0.0)
 
+  def avg_communication_cost(self, ti: str, pi: str, tk: str, pk: str) -> float:
+    if pi == pk:
+      return 0.0
+
+    return self.communication_cost.get(ti, {}).get(tk, 0.0)
+
   def calc_est(self, task_id: str, processor_id: str) -> float:
     data_ready_time = 0
     for p_id_parent in self.workflow.tasks_parents[task_id]:
