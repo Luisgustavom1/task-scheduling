@@ -8,16 +8,11 @@ class FIFOScheduler(Scheduler):
     self.name = "FIFO"
     self.sim = sim
 
-  def schedule(self) -> tuple[str, str, float]:
+  def schedule(self) -> tuple[str, str]:
     processors = self.sim.processors
 
     task_id = self.sim.ready_tasks.popleft()
     
     best_processor = min(processors, key=lambda p: processors[p].available_at)
-    
-    parents: Dict[str, set[str]] = self.sim.workflow.tasks_parents[task_id]
-    task_ready_time = 0
-    if parents:
-      task_ready_time = max(self.sim.completed_tasks[p_id] for p_id in parents)
-        
-    return task_id, best_processor, task_ready_time
+
+    return task_id, best_processor
