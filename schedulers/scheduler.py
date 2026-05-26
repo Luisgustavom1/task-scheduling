@@ -13,5 +13,5 @@ class Processor(common.Machine):
 
 class Scheduler(ABC):
   @abstractmethod
-  def schedule(self) -> tuple[str, str, float]:
+  def schedule(self) -> tuple[str, str]:
     pass

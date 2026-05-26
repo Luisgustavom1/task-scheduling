@@ -11,7 +11,7 @@ class IPEFT(Scheduler):
     self.rank_pct: Dict[str, float] = {}
     self.cnct: Dict[tuple[str, str], float] = {}
 
-  def schedule(self) -> tuple[str, str, float]:
+  def schedule(self) -> tuple[str, str]:
     if not self.rank_pct:
       for task_id in self.sim.workflow.tasks:
         self.calc_rank_pct(task_id)
@@ -37,7 +37,7 @@ class IPEFT(Scheduler):
         min_optimistic_eft = optimistic_eft
         best_processor = pj
 
-    return task_id, best_processor, min_optimistic_eft
+    return task_id, best_processor
   
   def isCriticalNode(self, ni: str) -> bool:
     return self.calc_aest(ni) == self.calc_alst(ni)
@@ -69,17 +69,9 @@ class IPEFT(Scheduler):
     return max_cnct
   
   def calc_eft(self, ti: str, pj: str) -> float:
-    est = self.calc_est(ti, pj)
+    est = self.sim.calc_est(ti, pj)
     execution_time = self.sim.execution_cost[ti].get(pj, 0)
     return est + execution_time
-
-  def calc_est(self, ni: str, pj: str) -> float:
-    data_ready_time = max(
-      self.calc_aft(nm) + self.sim.calc_communication_cost(nm, ni, pj)
-      for nm in self.sim.workflow.tasks_parents[ni]
-    ) if self.sim.workflow.tasks_parents[ni] else 0
-
-    return max(self.sim.processors[pj].available_at, data_ready_time)
 
   def calc_eft_cnct(self, vi: str, pj: str) -> float:
     if self.isCriticalNode(vi):
