@@ -37,7 +37,7 @@ class IPEFT(Scheduler):
         min_optimistic_eft = optimistic_eft
         best_processor = pj
 
-    return task_id, best_processor, self.calc_est(task_id, best_processor)
+    return task_id, best_processor, min_optimistic_eft
   
   def isCriticalNode(self, ni: str) -> bool:
     return self.calc_aest(ni) == self.calc_alst(ni)
