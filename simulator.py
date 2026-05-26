@@ -154,10 +154,10 @@ class Simulator:
 
   def report(self):
     metrics = SimulationMetrics(
-      history=self.history,
-      workflow=self.workflow,
-      CP=self.CP,
-      execution_cost=self.execution_cost,
+      _history=self.history,
+      _instance=self.instance,
+      _CP=self.CP,
+      _execution_cost=self.execution_cost,
     )
     metrics.log(self.logger)
 

@@ -1,40 +1,69 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
+from schedulers.scheduler import Instance
 
 @dataclass(slots=True)
 class SimulationMetrics:
-  history: list[dict[str, Any]]
-  workflow: Any
+  _history: list[dict[str, Any]]
+  _instance: Instance
   # critical path
-  CP: list[str]
-  execution_cost: dict[str, dict[str, float]]
+  _CP: list[str]
+  _execution_cost: dict[str, dict[str, float]]
   # Precompute minimum execution cost for critical path tasks
-  CPmin: list[tuple[str, float]] = field(init=False, default_factory=list)
-
-  def __post_init__(self):
-    for task_id in self.CP:
-      min_cost = min(self.execution_cost[task_id].values()) if self.execution_cost[task_id] else 0
-      self.CPmin.append((task_id, min_cost))
+  _CPmin: list[tuple[str, float]] | None = None
+  _makespan: int = 0
+  _load_balance: float | None = None
 
   def makespan(self) -> float:
-    return max((entry["end"] for entry in self.history), default=0)
+    if self._makespan == 0.0:
+      self._makespan = max((entry["end"] for entry in self._history), default=0)
+    return self._makespan
+
+  def CPmin(self) -> list[tuple[str, float]]:
+    if self._CPmin:
+      return self._CPmin
+    
+    self._CPmin = []
+    for task_id in self._CP:
+      min_cost = min(self._execution_cost[task_id].values()) if self._execution_cost[task_id] else 0
+      self._CPmin.append((task_id, min_cost))
+
+    return self._CPmin
 
   def slr(self) -> float:
-    cpmin_cost = sum(cost for _, cost in self.CPmin)
+    cpmin_cost = sum(cost for _, cost in self.CPmin())
     makespan = self.makespan()
     return makespan / cpmin_cost if cpmin_cost else 0
 
-  def throughput(self) -> float:
-    task_count = len(self.workflow.tasks)
-    makespan = self.makespan()
-    return task_count / (makespan or 1)
+  def loadBalance(self) -> float:
+    if self._load_balance is not None:
+      return self._load_balance
+
+    proc_workload: dict[str, float] = {}
+
+    for entry in self._history:
+      pid = entry["processor_id"]
+      duration = entry["end"] - entry["start"]
+      if pid not in proc_workload:
+        proc_workload[pid] = 0.0
+      proc_workload[pid] += duration
+
+    total_workload = sum(proc_workload.values())
+
+    if total_workload == 0 or len(self._instance.machines) == 0:
+      self._load_balance = 0.0
+      return self._load_balance
+    
+    avg_workload = total_workload / len(self._instance.machines)
+    self._load_balance = self.makespan() / avg_workload
+
+    return self._load_balance
 
   def log(self, logger: Any) -> None:
     makespan = self.makespan()
     slr = self.slr()
-    throughput = self.throughput()
 
     logger.info("Scheduler finished.")
     logger.info(f"Makespan: {makespan}")
     logger.info(f"SLR: {slr}")
-    logger.info(f"Throughput: {throughput:.8f} tasks/s")
+    logger.info(f"Load Balance: {self.loadBalance()}")

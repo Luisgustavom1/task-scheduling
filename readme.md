@@ -1,27 +1,27 @@
 # Task Scheduling Simulator
 
-Projeto para simular escalonamento de tarefas em DAGs usando diferentes algoritmos.
+Project to simulate task scheduling on DAGs using different algorithms.
 
-## Como rodar
+## How to run
 
-O simulador principal está no arquivo `main.py`.
+The main simulator is in the `main.py` file.
 
-Se o ambiente virtual `ve` já estiver disponível, rode:
+If the virtual environment `ve` is already available, run:
 
 ```bash
 ./ve/bin/python main.py
 ```
 
-Se preferir usar o Python do sistema, primeiro ative o ambiente virtual e depois execute:
+If you prefer to use the system Python, first activate the virtual environment then execute:
 
 ```bash
 source ve/bin/activate
 python main.py
 ```
 
-## Opções úteis
+## Useful options
 
-Você pode escolher o escalonador com `--scheduler`:
+You can choose the scheduler with `--scheduler`:
 
 ```bash
 ./ve/bin/python main.py --scheduler FIFO
@@ -29,21 +29,38 @@ Você pode escolher o escalonador com `--scheduler`:
 ./ve/bin/python main.py --scheduler PEFT
 ```
 
-Para trocar o DAG de entrada, use `--dag-path`:
+To change the input DAG, use `--dag-path`:
 
 ```bash
 ./ve/bin/python main.py --dag-path dag-instances/wfcommons/blast-chameleon-large-002.json
-./ve/bin/python main.py --dag-path /caminho/absoluto/para/seu-dag.json
+./ve/bin/python main.py --dag-path /absolute/path/to/your-dag.json
 ```
 
-Outros parâmetros disponíveis:
+Other available parameters:
 
-- `--visualize`: mostra uma visualização das tarefas e dos processadores enquanto o simulador executa.
-- `--log-level`: define o nível de log. Os valores aceitos são `CRITICAL`, `ERROR`, `WARNING`, `INFO` e `DEBUG`.
-- `--silence`: desliga os logs do escalonador.
+- `--visualize`: shows a visualization of tasks and processors while the simulator runs.
+- `--log-level`: sets the log level. Accepted values are `CRITICAL`, `ERROR`, `WARNING`, `INFO`, and `DEBUG`.
+- `--silence`: disables the scheduler's logs.
 
-## Exemplo
+## Example
 
 ```bash
 ./ve/bin/python main.py --scheduler HEFT --visualize --log-level INFO
 ```
+
+## Next Steps
+
+### Algorithms
+- [X] HEFT
+- [X] PEFT
+- [X] IPEFT
+- [] IHEFT
+- [] DLS
+
+### Metrics
+- [X] Makespan
+- [X] SLR (scheduling length ratio)
+- [X] Load balance
+- [ ] Communication cost
+- [ ] Waiting time
+- [ ] Comparison with metrics of other papers
