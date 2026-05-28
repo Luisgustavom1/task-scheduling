@@ -62,7 +62,7 @@ class PEFT(Scheduler):
     for tj in self.sim.workflow.tasks_children[ti]:
       min_oct = float('inf')
       for pw in self.sim.processors:
-        communication_cost = 0 if pw == pk else self.sim.communication_cost[ti].get(tj, 0)
+        communication_cost = 0 if pw == pk else self.sim.calc_communication_cost(ti, tj)
         oct = self.rank_oct(tj) + self.sim.execution_cost[tj].get(pw, 0) + communication_cost
         min_oct = min(min_oct, oct)
 

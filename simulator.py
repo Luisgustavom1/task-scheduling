@@ -27,7 +27,7 @@ class Simulator:
     
     self.execution_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> runtime
     self.avg_execution_cost: Dict[str, float] = {} # task_id -> average runtime across all machines
-    self.communication_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> cost
+    self._communication_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> cost
     self.CP = [] # critical path tasks
 
     self.normalizeStartTasks()
@@ -107,14 +107,14 @@ class Simulator:
 
   def buildCommunicationCost(self):
     for task_id_i, task_i in self.workflow.tasks.items():
-      self.communication_cost[task_id_i] = {}
+      self._communication_cost[task_id_i] = {}
       for task_id_j in self.workflow.tasks_children.get(task_id_i, []):
         task_j: Task = self.workflow.tasks[task_id_j]
 
         shared_files = set(task_i.output_files) & set(task_j.input_files)
         total_size = sum(f.size for f in shared_files)
         # maybe this calculation of communication cost is wrong
-        self.communication_cost[task_id_i][task_id_j] = total_size / self.bandwidth
+        self._communication_cost[task_id_i][task_id_j] = total_size / self.bandwidth
   
   def buildAvgExecutionCost(self):
     for task_id in self.workflow.tasks:
@@ -140,7 +140,7 @@ class Simulator:
       max_cost_child = None
       for child_id in children:
         for runtime in self.execution_cost[child_id].values():
-          cost = runtime + self.communication_cost.get(task_id, {}).get(child_id, 0)
+          cost = runtime + self._communication_cost.get(task_id, {}).get(child_id, 0)
           if cost > max_cost:
             max_cost = cost
             max_cost_child = child_id
@@ -246,13 +246,13 @@ class Simulator:
     if possible_processor_j is not None and self.task_allocation.get(task_id_i) == possible_processor_j:
       return 0
 
-    return self.communication_cost.get(task_id_i, {}).get(task_id_j, 0.0)
+    return self._communication_cost.get(task_id_i, {}).get(task_id_j, 0.0)
 
   def avg_communication_cost(self, ti: str, pi: str, tk: str, pk: str) -> float:
     if pi == pk:
       return 0.0
 
-    return self.communication_cost.get(ti, {}).get(tk, 0.0)
+    return self._communication_cost.get(ti, {}).get(tk, 0.0)
 
   # return est time and the communication cost to run task ti on processor pj
   def calc_est(self, task_id: str, processor_id: str) -> tuple[float, float]:
