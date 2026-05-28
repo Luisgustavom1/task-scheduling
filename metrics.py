@@ -14,6 +14,7 @@ class SimulationMetrics:
   _makespan: int = 0
   _load_balance: float | None = None
   _communication_cost: float | None = None
+  _total_wait_time: float | None = None
 
   def makespan(self) -> float:
     if self._makespan == 0.0:
@@ -63,7 +64,14 @@ class SimulationMetrics:
   def communicationCost(self) -> float:
     if self._communication_cost is not None:
       return self._communication_cost
-    return sum(entry.get("communication_cost", 0.0) for entry in self._history)
+    self._communication_cost = sum(entry.get("communication_cost", 0.0) for entry in self._history)
+    return self._communication_cost
+
+  def totalWaitTime(self) -> float:
+    if self._total_wait_time is not None:
+      return self._total_wait_time
+    self._total_wait_time = sum(entry.get("wait_time", 0.0) for entry in self._history)
+    return self._total_wait_time
 
   def log(self, logger: Any) -> None:
     makespan = self.makespan()
@@ -74,3 +82,4 @@ class SimulationMetrics:
     logger.info(f"SLR: {slr}")
     logger.info(f"Load Balance: {self.loadBalance()}")
     logger.info(f"Communication Cost: {self.communicationCost()}")
+    logger.info(f"Total Wait Time: {self.totalWaitTime()}")

@@ -191,6 +191,7 @@ class Simulator:
 
       duration = self.calculate_task_runtime(task, processor_to_run)
       end_time = start_time + duration
+      wait_time = start_time - task_ready_time
 
       processor_to_run.available_at = end_time
       self.completed_tasks[task_id] = end_time
@@ -201,7 +202,8 @@ class Simulator:
         "processor_id": machine_id,
         "start": start_time,
         "end": end_time,
-        "communication_cost": communication_cost
+        "communication_cost": communication_cost,
+        "wait_time": wait_time
       })
 
       if visualizer is not None and hasattr(visualizer, "on_task_scheduled"):

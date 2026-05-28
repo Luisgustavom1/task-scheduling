@@ -61,6 +61,6 @@ Other available parameters:
 - [X] Makespan
 - [X] SLR (scheduling length ratio)
 - [X] Load balance
-- [ ] Communication cost
-- [ ] Waiting time
+- [X] Communication cost
+- [X] Waiting time
 - [ ] Comparison with metrics of other papers
