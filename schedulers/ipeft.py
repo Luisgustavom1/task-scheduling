@@ -72,12 +72,12 @@ class IPEFT(Scheduler):
     return max_cnct
   
   def calc_eft(self, ti: str, pj: str) -> float:
-    est = self.sim.calc_est(ti, pj)
+    est, _ = self.sim.calc_est(ti, pj)
     execution_time = self.sim.execution_cost[ti].get(pj, 0)
     return est + execution_time
 
   def calc_eft_cnct(self, vi: str, pj: str) -> float:
-    if self.cn(vi):
+    if self.cnp(vi):
       return self.calc_eft(vi, pj)
     
     return self.calc_eft(vi, pj) + self.calc_cnct(vi, pj)
@@ -103,7 +103,7 @@ class IPEFT(Scheduler):
     # -> exit = aest(03) + comm_cost(03) + avg_exec_cost(03)
 
     self.aest[ni] = max(
-      self.calc_aest(nm) + self.sim.avg_execution_cost[ni] + self.sim.calc_communication_cost(nm, ni)
+      self.calc_aest(nm) + self.sim.avg_execution_cost[nm] + self.sim.calc_communication_cost(nm, ni)
       for nm in self.sim.workflow.tasks_parents[ni]
     )
 
@@ -116,7 +116,7 @@ class IPEFT(Scheduler):
 
     # if exit task, alst is 0
     if len(self.sim.workflow.tasks_children[ni]) == 0:
-      return 0
+      return self.calc_aest(ni)
     
     # -> entry =>
     #   min (ALST(01) - comm_cost(entry, 01)) e (ALST(02) - comm_cost(entry, 02)) - avg_exec_cost(entry) =>
