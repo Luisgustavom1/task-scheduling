@@ -13,6 +13,7 @@ class SimulationMetrics:
   _CPmin: list[tuple[str, float]] | None = None
   _makespan: int = 0
   _load_balance: float | None = None
+  _communication_cost: float | None = None
 
   def makespan(self) -> float:
     if self._makespan == 0.0:
@@ -59,6 +60,11 @@ class SimulationMetrics:
 
     return self._load_balance
 
+  def communicationCost(self) -> float:
+    if self._communication_cost is not None:
+      return self._communication_cost
+    return sum(entry.get("communication_cost", 0.0) for entry in self._history)
+
   def log(self, logger: Any) -> None:
     makespan = self.makespan()
     slr = self.slr()
@@ -67,3 +73,4 @@ class SimulationMetrics:
     logger.info(f"Makespan: {makespan}")
     logger.info(f"SLR: {slr}")
     logger.info(f"Load Balance: {self.loadBalance()}")
+    logger.info(f"Communication Cost: {self.communicationCost()}")

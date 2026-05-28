@@ -178,7 +178,7 @@ class Simulator:
 
       task_id, machine_id = action
 
-      task_ready_time = self.calc_est(task_id, machine_id)
+      task_ready_time, communication_cost = self.calc_est(task_id, machine_id)
 
       task: Task | None = self.workflow.tasks.get(task_id)
       if task is None:
@@ -195,11 +195,13 @@ class Simulator:
       processor_to_run.available_at = end_time
       self.completed_tasks[task_id] = end_time
       self.task_allocation[task_id] = machine_id
+
       self.history.append({
         "task_id": task_id,
         "processor_id": machine_id,
         "start": start_time,
-        "end": end_time
+        "end": end_time,
+        "communication_cost": communication_cost
       })
 
       if visualizer is not None and hasattr(visualizer, "on_task_scheduled"):
@@ -252,7 +254,9 @@ class Simulator:
 
     return self.communication_cost.get(ti, {}).get(tk, 0.0)
 
-  def calc_est(self, task_id: str, processor_id: str) -> float:
+  # return est time and the communication cost to run task ti on processor pj
+  def calc_est(self, task_id: str, processor_id: str) -> tuple[float, float]:
+    communication_cost = 0.0
     data_ready_time = 0
     for p_id_parent in self.workflow.tasks_parents[task_id]:
       parent_finish = self.completed_tasks[p_id_parent]
@@ -261,6 +265,7 @@ class Simulator:
         raise ValueError(f"Parent task {p_id_parent} of task {task_id} has not been completed yet.")
 
       comm_cost = self.calc_communication_cost(p_id_parent, task_id, processor_id)
+      communication_cost += comm_cost
       data_ready_time = max(data_ready_time, parent_finish + comm_cost)
 
-    return max(self.processors[processor_id].available_at, data_ready_time)
+    return max(self.processors[processor_id].available_at, data_ready_time), communication_cost
