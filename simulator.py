@@ -188,23 +188,25 @@ class Simulator:
       free_time = processor_to_run.available_at
       self.logger.debug(f"freeTime {free_time}s, taskReadyTime {task_ready_time}s")
       start_time = max(free_time, task_ready_time)
+      idle_time = start_time - free_time
 
       duration = self.calculate_task_runtime(task, processor_to_run)
       end_time = start_time + duration
-      idle_time = start_time - task_ready_time
 
       processor_to_run.available_at = end_time
       self.completed_tasks[task_id] = end_time
       self.task_allocation[task_id] = machine_id
 
-      self.history.append({
+      history = {
         "task_id": task_id,
         "processor_id": machine_id,
         "start": start_time,
         "end": end_time,
         "communication_cost": communication_cost,
         "idle_time": idle_time
-      })
+      }
+      self.history.append(history)
+      self.logger.debug(f"history computed {history}")
 
       if visualizer is not None and hasattr(visualizer, "on_task_scheduled"):
         visualizer.on_task_scheduled(

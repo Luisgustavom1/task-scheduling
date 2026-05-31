@@ -73,6 +73,9 @@ class SimulationMetrics:
     self._total_idle_time = sum(entry.get("idle_time", 0.0) for entry in self._history)
     return self._total_idle_time
 
+  def totalWaitTime(self) -> float:
+    return sum(entry.get("start", 0.0) for entry in self._history) / len(self._instance.machines)
+
   def log(self, logger: Any) -> None:
     makespan = self.makespan()
     slr = self.slr()
@@ -83,3 +86,4 @@ class SimulationMetrics:
     logger.info(f"Load Balance: {self.loadBalance()}")
     logger.info(f"Communication Cost: {self.communicationCost()}")
     logger.info(f"Total Idle Time: {self.totalIdleTime()}")
+    logger.info(f"Total Wait Time: {self.totalWaitTime()}")
