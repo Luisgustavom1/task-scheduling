@@ -62,5 +62,5 @@ Other available parameters:
 - [X] SLR (scheduling length ratio)
 - [X] Load balance
 - [X] Communication cost
-- [X] Waiting time
-- [ ] Comparison with metrics of other papers
+- [X] Idle time
+- [ ] Waiting time
