@@ -50,6 +50,9 @@ Other available parameters:
 
 ## Next Steps
 
+### Simulador improvements
+- [ ] Consider parallelism on processors
+
 ### Algorithms
 - [X] HEFT
 - [X] PEFT
@@ -63,4 +66,13 @@ Other available parameters:
 - [X] Load balance
 - [X] Communication cost
 - [X] Idle time
-- [ ] Waiting time
+- [X] Waiting time
+
+### References
+- Static vs. Dynamic List-SchedulingPerformance Comparison
+- Análise comparativa de algoritmos de escalonamento de workflows científicos em processadores heterogêneos
+- A Compile-Time Scheduling Heuristic for Interconnection-Constrained Heterogeneous Processor Architectures (DLS)
+- A list scheduling algorithm for heterogeneous systems based on a critical node cost table and pessimistic cost table (IPEFT)
+- Task scheduling for heterogeneous computing systems (IHEFT)
+- List Scheduling Algorithm for Heterogeneous Systems by an Optimistic Cost Table (PEFT)
+- Task Scheduling Algorithms for Heterogeneous Processors (HEFT)
