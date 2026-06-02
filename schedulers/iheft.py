@@ -7,14 +7,26 @@ class IHEFT(Scheduler):
   def __init__(self, simulator: Simulator):
     self.name = "IHEFT"
     self.sim = simulator
-    self.weights: Dict[str, float] = {}
+    self._rank_proposed: Dict[str, float] = {}
 
   def schedule(self) -> tuple[str, str]:
-    if not self.weights:
+    if not self._rank_proposed:
       for task_id in self.sim.workflow.tasks:
         self.rank_proposed(task_id)
 
-    task_id = max(self.sim.ready_tasks, key=lambda tid: self.weights[tid])
+    unescheduled_tasks = list(self.sim.ready_tasks)
+
+    if not unescheduled_tasks:
+      raise RuntimeError("No unscheduled tasks remaining.")
+
+    unescheduled_tasks.sort(key=lambda tid: (
+      -self._rank_proposed[tid],                       # 1. Highest rank first (Descending)
+      self.sim.workflow.tasks[tid].priority,         # 2. Lowest priority first (Ascending)
+    ))
+
+    task_id = unescheduled_tasks.pop(0)
+
+    self.sim.ready_tasks.remove(task_id)
 
     best_eft_processor = None
     best_exec_processor = None
@@ -41,15 +53,15 @@ class IHEFT(Scheduler):
     if best_eft_exec_time <= min_exec_time:
       return task_id, best_eft_processor
 
-    weight_abstract = self.weight_abstract(task_id, best_eft_processor, best_exec_processor)
+    weight_abstract = self.weight_abstract(task_id, min_eft, best_exec_processor)
     cross_threshold = self.cross_threshold(task_id, weight_abstract)
-    if cross_threshold <= random.random():
+    if cross_threshold <= random.uniform(0.1, 0.3):
       return task_id, best_eft_processor
 
     return task_id, best_exec_processor
 
-  def weight_abstract(self, task_id: str, pj: str, pk: str) -> float:
-    eft_j = self.calc_eft(task_id, pj)
+  def weight_abstract(self, task_id: str, min_eft: float, pk: str) -> float:
+    eft_j = min_eft
     eft_k = self.calc_eft(task_id, pk)
 
     if eft_j == 0 or eft_k == 0:
@@ -61,24 +73,23 @@ class IHEFT(Scheduler):
     if weight_abstract <= 0:
       return float("inf")
 
-    return self.rank_proposed(ni) / weight_abstract
+    return self.weight(ni) / weight_abstract
 
   def calc_eft(self, task_id: str, processor_id: str) -> float:
     est, _ = self.sim.calc_est(task_id, processor_id)
     return est + self.sim.execution_cost[task_id].get(processor_id, 0.0)
 
   def rank_proposed(self, ni: str) -> float:
-    if ni in self.weights:
-      return self.weights[ni]
+    if ni in self._rank_proposed:
+      return self._rank_proposed[ni]
 
-    weight = self.weight(ni)
     max_succ_weight = 0
     for succ_id in self.sim.workflow.tasks_children[ni]:
       comm_cost = self.sim.calc_communication_cost(ni, succ_id) 
       max_succ_weight = max(max_succ_weight, comm_cost + self.rank_proposed(succ_id))
 
-    self.weights[ni] = weight + max_succ_weight
-    return self.weights[ni]
+    self._rank_proposed[ni] = self.weight(ni) + max_succ_weight
+    return self._rank_proposed[ni]
   
   def weight(self, ni: str) -> float:
     highest = max(self.sim.execution_cost[ni].values())

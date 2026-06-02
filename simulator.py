@@ -20,9 +20,9 @@ class Simulator:
     self.completed_tasks = {} # task_id -> end_time
     self.history = []
 
-    self.start_task: Task = self.build_artifical_tasks("artificial_entry_point")
-    self.exit_task: Task = self.build_artifical_tasks("artificial_exit_point")
-    
+    self.start_task: Task = self.build_artifical_tasks("artificial_entry_point", priority=1)
+    self.exit_task: Task = self.build_artifical_tasks("artificial_exit_point", priority=int(1e9))
+
     self.task_allocation: Dict[str, str] = {} # task_id -> machine_id
     
     self.execution_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> runtime
@@ -37,12 +37,13 @@ class Simulator:
     self.buildAvgExecutionCost()
     self.calcCP()
 
-  def build_artifical_tasks(self, id: str) -> Task:
+  def build_artifical_tasks(self, id: str, priority: int = 0) -> Task:
     return Task(
       task_id=id,
       name=id,
       runtime=0,
       cores=0,
+      priority=priority,
       input_files=[],
       output_files=[],
       machines=[]
