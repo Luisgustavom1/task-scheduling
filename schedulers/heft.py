@@ -26,7 +26,6 @@ class HEFT(Scheduler):
 
     best_processor = list(self.sim.processors.keys())[0]
     min_eft = float('inf')
-    min_est = 0
 
     for p_id in self.sim.processors:
       execution_time = self.sim.execution_cost[task_id].get(p_id, 0)
@@ -38,7 +37,6 @@ class HEFT(Scheduler):
       if eft < min_eft:
         min_eft = eft
         best_processor = p_id
-        min_est = est
 
     return task_id, best_processor
 
