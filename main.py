@@ -9,6 +9,7 @@ from wfcommons import wfinstances
 from schedulers.fifo import FIFOScheduler
 from schedulers.heft import HEFT
 from schedulers.ipeft import IPEFT
+from schedulers.iheft import IHEFT
 from visualizer import SchedulerVisualizer
 
 parser = argparse.ArgumentParser(description="Run the task scheduler.")
@@ -22,7 +23,7 @@ parser.add_argument(
 parser.add_argument(
   "--scheduler",
   default="FIFO",
-  choices=["FIFO", "HEFT", "PEFT", "IPEFT"],
+  choices=["FIFO", "HEFT", "PEFT", "IPEFT", "IHEFT"],
   help="Select scheduling algorithm.",
 )
 parser.add_argument(
@@ -65,6 +66,7 @@ scheduler_map = {
   "HEFT": HEFT,
   "PEFT": PEFT,
   "IPEFT": IPEFT,
+  "IHEFT": IHEFT,
 }
 scheduler_class = scheduler_map[args.scheduler]
 scheduler = scheduler_class(simulator)
