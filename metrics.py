@@ -67,12 +67,15 @@ class SimulationMetrics:
     self._communication_cost = sum(entry.get("communication_cost", 0.0) for entry in self._history)
     return self._communication_cost
 
-  
-
   def totalWaitTime(self) -> float:
     if self._total_wait_time is not None:
       return self._total_wait_time
-    self._total_wait_time = sum(entry.get("wait_time", 0.0) for entry in self._history)
+    total = 0.0
+    for entry in self._history:
+      start = float(entry.get("start", 0.0))
+      data_ready = float(entry.get("data_ready_time", 0.0))
+      total += max(0.0, start - data_ready)
+    self._total_wait_time = total
     return self._total_wait_time
 
   def log(self, logger: Any) -> None:

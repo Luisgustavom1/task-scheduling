@@ -207,7 +207,7 @@ class Simulator:
         "start": start_time,
         "end": end_time,
         "communication_cost": communication_cost,
-        "wait_time": start_time - data_ready_time,
+        "data_ready_time": data_ready_time,
       }
       self.history.append(history)
       self.logger.debug(f"history computed {history}")
