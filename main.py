@@ -6,7 +6,6 @@ import sys
 from schedulers.peft import PEFT
 from simulator import Simulator
 from wfcommons import wfinstances
-from schedulers.fifo import FIFOScheduler
 from schedulers.heft import HEFT
 from schedulers.ipeft import IPEFT
 from schedulers.iheft import IHEFT
@@ -22,8 +21,8 @@ parser.add_argument(
 )
 parser.add_argument(
   "--scheduler",
-  default="FIFO",
-  choices=["FIFO", "HEFT", "PEFT", "IPEFT", "IHEFT"],
+  default="HEFT",
+  choices=["HEFT", "PEFT", "IPEFT", "IHEFT"],
   help="Select scheduling algorithm.",
 )
 parser.add_argument(
@@ -62,7 +61,6 @@ simulator = Simulator(workflow, bandwidth=1e6, logger=logging.getLogger(__name__
 
 # Instantiate scheduler based on user selection
 scheduler_map = {
-  "FIFO": FIFOScheduler,
   "HEFT": HEFT,
   "PEFT": PEFT,
   "IPEFT": IPEFT,

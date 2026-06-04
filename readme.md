@@ -24,7 +24,6 @@ python main.py
 You can choose the scheduler with `--scheduler`:
 
 ```bash
-./ve/bin/python main.py --scheduler FIFO
 ./ve/bin/python main.py --scheduler HEFT
 ./ve/bin/python main.py --scheduler PEFT
 ```
