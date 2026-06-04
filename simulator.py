@@ -29,6 +29,9 @@ class Simulator:
     self.avg_execution_cost: Dict[str, float] = {} # task_id -> average runtime across all machines
     self._communication_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> cost
     self.CP = [] # critical path tasks
+    self.processor_schedules: Dict[str, list[tuple[float, float]]] = { # processor_id -> list of (start_time, end_time) for scheduled tasks
+      p_id: [] for p_id in self.processors
+    }
 
     self.normalizeStartTasks()
     self.normalizeExitTasks()
@@ -187,14 +190,18 @@ class Simulator:
 
       processor_to_run = self.processors[machine_id]
       free_time = processor_to_run.available_at
-      self.logger.debug(f"freeTime {free_time}s, taskReadyTime {task_ready_time}s")
-      start_time = max(free_time, task_ready_time)
-      idle_time = start_time - free_time
+      
+      start_time = task_ready_time
 
       duration = self.calculate_task_runtime(task, processor_to_run)
       end_time = start_time + duration
 
-      processor_to_run.available_at = end_time
+      self.processor_schedules[machine_id].append((start_time, end_time))
+      self.processor_schedules[machine_id].sort(key=lambda x: x[0])
+
+      idle_time = start_time - free_time
+
+      processor_to_run.available_at = max(processor_to_run.available_at, end_time)
       self.completed_tasks[task_id] = end_time
       self.task_allocation[task_id] = machine_id
 
@@ -260,7 +267,9 @@ class Simulator:
     return self._communication_cost.get(ti, {}).get(tk, 0.0)
 
   # return est time and the communication cost to run task ti on processor pj
+  # est -> the earliest time that task ti can start on processor pj considering the finish time of its parent tasks and the communication cost
   def calc_est(self, task_id: str, processor_id: str) -> tuple[float, float]:
+    execution_time = self.execution_cost[task_id].get(processor_id, 0.0)
     communication_cost = 0.0
     data_ready_time = 0
     for p_id_parent in self.workflow.tasks_parents[task_id]:
@@ -273,4 +282,25 @@ class Simulator:
       communication_cost += comm_cost
       data_ready_time = max(data_ready_time, parent_finish + comm_cost)
 
-    return max(self.processors[processor_id].available_at, data_ready_time), communication_cost
+    schedules = self.processor_schedules[processor_id]
+    if not schedules:
+      return data_ready_time, communication_cost
+
+    first_task_start = schedules[0][0]
+    if data_ready_time + execution_time <= first_task_start:
+      return data_ready_time, communication_cost
+
+    # schedules
+    # (0, 3)
+    # (3, 5)
+    # ... gap 3 time (5, 10) -> 10 - 5 = 5
+    # (10, 12)
+    for i in range(len(schedules) - 1):
+      gap_start = max(data_ready_time, schedules[i][1]) # max(data_ready_time, end of prev task)
+      gap_end = schedules[i + 1][0] # start of next task
+
+      if gap_end - gap_start >= execution_time:
+        return gap_start, communication_cost
+
+    process_available_at = schedules[-1][1]
+    return max(process_available_at, data_ready_time), communication_cost
