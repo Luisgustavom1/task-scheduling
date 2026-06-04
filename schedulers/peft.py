@@ -37,7 +37,7 @@ class PEFT(Scheduler):
     return task_id, best_processor
 
   def calc_eft(self, ti: str, pj: str) -> float:
-    est, _ = self.sim.calc_est(ti, pj)
+    est, _, _ = self.sim.calc_est(ti, pj)
     execution_time = self.sim.execution_cost[ti].get(pj, 0)
     return est + execution_time
   

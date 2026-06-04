@@ -30,7 +30,7 @@ class HEFT(Scheduler):
     for p_id in self.sim.processors:
       execution_time = self.sim.execution_cost[task_id].get(p_id, 0)
 
-      est, _ = self.sim.calc_est(task_id, p_id)
+      est, _, _ = self.sim.calc_est(task_id, p_id)
       eft = est + execution_time
 
       # schedule task to the processor that minimizes EFT

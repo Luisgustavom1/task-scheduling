@@ -182,7 +182,7 @@ class Simulator:
 
       task_id, machine_id = action
 
-      task_ready_time, communication_cost = self.calc_est(task_id, machine_id)
+      start_time, communication_cost, data_ready_time = self.calc_est(task_id, machine_id)
 
       task: Task | None = self.workflow.tasks.get(task_id)
       if task is None:
@@ -191,15 +191,11 @@ class Simulator:
       processor_to_run = self.processors[machine_id]
       free_time = processor_to_run.available_at
       
-      start_time = task_ready_time
-
       duration = self.calculate_task_runtime(task, processor_to_run)
       end_time = start_time + duration
 
       self.processor_schedules[machine_id].append((start_time, end_time))
       self.processor_schedules[machine_id].sort(key=lambda x: x[0])
-
-      idle_time = start_time - free_time
 
       processor_to_run.available_at = max(processor_to_run.available_at, end_time)
       self.completed_tasks[task_id] = end_time
@@ -211,7 +207,7 @@ class Simulator:
         "start": start_time,
         "end": end_time,
         "communication_cost": communication_cost,
-        "idle_time": idle_time
+        "wait_time": start_time - data_ready_time,
       }
       self.history.append(history)
       self.logger.debug(f"history computed {history}")
@@ -222,7 +218,7 @@ class Simulator:
           processor_id=machine_id,
           start_time=start_time,
           end_time=end_time,
-          ready_time=task_ready_time,
+          ready_time=start_time,
         )
 
       self.logger.debug(f"task {task_id} escalonada para máquina {machine_id} ({start_time}s -> {end_time}s)")
@@ -268,7 +264,7 @@ class Simulator:
 
   # return est time and the communication cost to run task ti on processor pj
   # est -> the earliest time that task ti can start on processor pj considering the finish time of its parent tasks and the communication cost
-  def calc_est(self, task_id: str, processor_id: str) -> tuple[float, float]:
+  def calc_est(self, task_id: str, processor_id: str) -> tuple[float, float, float]:
     execution_time = self.execution_cost[task_id].get(processor_id, 0.0)
     communication_cost = 0.0
     data_ready_time = 0
@@ -284,11 +280,11 @@ class Simulator:
 
     schedules = self.processor_schedules[processor_id]
     if not schedules:
-      return data_ready_time, communication_cost
+      return data_ready_time, communication_cost, data_ready_time
 
     first_task_start = schedules[0][0]
     if data_ready_time + execution_time <= first_task_start:
-      return data_ready_time, communication_cost
+      return data_ready_time, communication_cost, data_ready_time
 
     # schedules
     # (0, 3)
@@ -300,7 +296,7 @@ class Simulator:
       gap_end = schedules[i + 1][0] # start of next task
 
       if gap_end - gap_start >= execution_time:
-        return gap_start, communication_cost
+        return gap_start, communication_cost, data_ready_time
 
     process_available_at = schedules[-1][1]
-    return max(process_available_at, data_ready_time), communication_cost
+    return max(process_available_at, data_ready_time), communication_cost, data_ready_time

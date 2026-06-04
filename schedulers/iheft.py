@@ -35,7 +35,7 @@ class IHEFT(Scheduler):
 
     for p_id in self.sim.processors:
       execution_time = self.sim.execution_cost[task_id].get(p_id, 0.0)
-      est, _ = self.sim.calc_est(task_id, p_id)
+      est, _, _ = self.sim.calc_est(task_id, p_id)
       eft = est + execution_time
 
       if eft < min_eft:
@@ -76,7 +76,7 @@ class IHEFT(Scheduler):
     return self.weight(ni) / weight_abstract
 
   def calc_eft(self, task_id: str, processor_id: str) -> float:
-    est, _ = self.sim.calc_est(task_id, processor_id)
+    est, _, _ = self.sim.calc_est(task_id, processor_id)
     return est + self.sim.execution_cost[task_id].get(processor_id, 0.0)
 
   def rank_proposed(self, ni: str) -> float:
