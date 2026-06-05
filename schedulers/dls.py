@@ -67,28 +67,36 @@ class DLS(Scheduler):
     if ni in self._SL_cache:
       return self._SL_cache[ni]
 
-    if ni not in self.sim.workflow.tasks_children:
-      return 0.0
+    exec_time_avg = self.E(ni)
+    # leaf node
+    if ni not in self.sim.workflow.tasks_children or not self.sim.workflow.tasks_children[ni]:
+      self._SL_cache[ni] = exec_time_avg
+      return self._SL_cache[ni]
 
     max_succ_weight = 0.0
     for succ_id in self.sim.workflow.tasks_children[ni]:
-      comm_cost = self.sim.calc_communication_cost(ni, succ_id)
       succ_rank = self.SL(succ_id)
-      weight = comm_cost + succ_rank
-      if weight > max_succ_weight:
-        max_succ_weight = weight
+      if succ_rank > max_succ_weight:
+        max_succ_weight = succ_rank
 
-    exec_time_avg = self.E(ni)
     self._SL_cache[ni] = exec_time_avg + max_succ_weight
     return self._SL_cache[ni]
 
   def E(self, ni: str) -> float:
     execution_times = list(self.sim.execution_cost[ni].values())
-    return statistics.median(execution_times)
+    median = statistics.median(execution_times)
+
+    if median == float('inf'):
+      finite_times = [et for et in execution_times if et != float('inf')]
+      if not finite_times:
+        raise RuntimeError(f"Task {ni} cannot be executed on ANY processor.")
+      median = max(finite_times)
+      
+    return median
 
   def delta(self, ni: str, pj: str) -> float:
-    return self.E(ni) - self.sim.execution_cost[ni].get(pj, 0.0)
-    
+    return self.E(ni) - self.get_execution_time(ni, pj)
+
   def GDL(self, ni: str) -> tuple[float, str]:
     preferred_processor = None
     highest_dl = -float('inf')
@@ -111,7 +119,7 @@ class DLS(Scheduler):
       if dl > second_highest_dl:
         second_highest_dl = dl
 
-    if highest_dl > second_highest_dl:
+    if highest_dl > second_highest_dl and second_highest_dl != -float('inf'):
       cost = highest_dl - second_highest_dl
     else:
       cost = 0.0
@@ -140,7 +148,7 @@ class DLS(Scheduler):
       return 0.0
 
     e = self.E(descendant)
-    exec_time = self.sim.execution_cost[descendant].get(pj, 0.0)
+    exec_time = self.get_execution_time(descendant, pj)
     f = self.F(ni, descendant, pj)
 
     return e - min(f, exec_time)
@@ -153,19 +161,19 @@ class DLS(Scheduler):
       if pk == pj:
         continue
 
-      exec_time = self.sim.execution_cost[d_ni].get(pk, 0.0)
+      exec_time = self.get_execution_time(d_ni, pk)
       if exec_time < min_exec_time:
         min_exec_time = exec_time
     
     if min_exec_time == float('inf'):
-      self.sim.logger.warning(f"No execution time found for descendant {d_ni} on any processor other than {pj}. Assuming 0.0.")
-      return 0.0
+      self.sim.logger.warning(f"Descendant {d_ni} cannot execute on any processor other than {pj}.")
+      return float('inf')  # The time to finish elsewhere is strictly infinite
 
     return comm_cost + min_exec_time
   
   # we consider the descendant to which Ni, passes the most data,
   def D(self, ni: str) -> str | None:
-    max_comm_cost = 0.0
+    max_comm_cost = -1.0
     descendant_id = None
     for succ_id in self.sim.workflow.tasks_children[ni]:
       comm_cost = self.sim.calc_communication_cost(ni, succ_id)
@@ -174,7 +182,6 @@ class DLS(Scheduler):
         descendant_id = succ_id
 
     return descendant_id
-
 
   # Earliest time that all data required by node N , is available
   # at processor P3 at state C ( t ) . This quantity, calculated within
@@ -194,3 +201,6 @@ class DLS(Scheduler):
       earliest_data_available = max(earliest_data_available, comm_cost + pred_finish_time)
 
     return earliest_data_available
+  
+  def get_execution_time(self, ni: str, pj: str) -> float:
+    return self.sim.execution_cost[ni].get(pj, float('inf'))
