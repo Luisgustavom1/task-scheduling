@@ -25,22 +25,25 @@ class DLS(Scheduler):
       self.sim.workflow.tasks[tid].priority,         # 2. Lowest priority first (Ascending)
     ))
 
-    task_id = unescheduled_tasks.pop(0)
+    candidate_count = min(3, len(unescheduled_tasks))
+    candidates = unescheduled_tasks[:candidate_count]
 
+    max_gdl = -float('inf')
+    best_processor = None
+    task_id = None
+
+    for tid in candidates:
+      gdl, pid = self.GDL(tid)
+      if gdl > max_gdl:
+        max_gdl = gdl
+        best_processor = pid
+        task_id = tid
+
+    if task_id is None or best_processor is None:
+      raise RuntimeError("Unable to select a task and processor for scheduling.")
+    
     self.sim.ready_tasks.remove(task_id)
 
-    max_dl = -float('inf')
-    best_processor = None
-
-    for p_id in self.sim.processors:
-      dl = self.DL(task_id, p_id)
-      if dl > max_dl:
-        max_dl = dl
-        best_processor = p_id
-
-    if best_processor is None:
-      raise RuntimeError(f"Unable to select processors for task {task_id}.")
-    
     return task_id, best_processor
 
   def rank_tasks(self, ni: str) -> float:
@@ -85,11 +88,40 @@ class DLS(Scheduler):
 
   def delta(self, ni: str, pj: str) -> float:
     return self.E(ni) - self.sim.execution_cost[ni].get(pj, 0.0)
+    
+  def GDL(self, ni: str) -> tuple[float, str]:
+    preferred_processor = None
+    highest_dl = -float('inf')
+    second_highest_dl = -float('inf')
+
+    for pj in self.sim.processors:
+      dl = self.DL_2(ni, pj)
+      if dl > highest_dl:
+        highest_dl = dl
+        preferred_processor = pj
+
+    if not preferred_processor:
+      raise RuntimeError(f"Unable to determine preferred processor for task {ni}.")
+
+    for pj in self.sim.processors:
+      if pj == preferred_processor:
+        continue
+
+      dl = self.DL_2(ni, pj)
+      if dl > second_highest_dl:
+        second_highest_dl = dl
+
+    if highest_dl > second_highest_dl:
+      cost = highest_dl - second_highest_dl
+    else:
+      cost = 0.0
+
+    return highest_dl + cost, preferred_processor
 
   # maximization term represents the earliest time that node N ,
   # can start execution on processor PI
   # defined by -> DL(ni, pj) = SL(Ni) - max[DA(ni, pj)]
-  def DL(self, ni: str, pj: str) -> float:
+  def DL_2(self, ni: str, pj: str) -> float:
     sl = self.SL(ni)
 
     tf = self.sim.processors[pj].available_at
