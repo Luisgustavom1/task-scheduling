@@ -3,6 +3,8 @@ import logging
 import pathlib
 import sys
 
+from charts import plot_metric_comparison
+from metrics import SimulationMetrics
 from schedulers.dls import DLS
 from schedulers.peft import PEFT
 from simulator import Simulator
@@ -22,9 +24,14 @@ parser.add_argument(
 )
 parser.add_argument(
   "--scheduler",
-  default="HEFT",
   choices=["HEFT", "PEFT", "IPEFT", "IHEFT", "DLS"],
   help="Select scheduling algorithm.",
+)
+parser.add_argument(
+  "--compare",
+  action="store_true",
+  default=False,
+  help="Run all algorithms and plot comparison charts for each metric.",
 )
 parser.add_argument(
   "--visualize",
@@ -44,6 +51,7 @@ logging.basicConfig(
     level=getattr(logging, args.log_level.upper()),
     handlers=[logging.StreamHandler(sys.stdout)],
 )
+logger = logging.getLogger(__name__)
 
 repo_root = pathlib.Path(__file__).resolve().parent
 dag_path = pathlib.Path(args.dag_path)
@@ -53,13 +61,6 @@ if not dag_path.is_absolute():
 if not dag_path.exists():
   parser.error(f"DAG file not found: {dag_path}")
 
-workflow: wfinstances.Instance = wfinstances.Instance(
-  input_instance=dag_path,
-  logger=logging.getLogger(__name__)
-)
-
-simulator = Simulator(workflow, bandwidth=1e6, logger=logging.getLogger(__name__))
-
 # Instantiate scheduler based on user selection
 scheduler_map = {
   "HEFT": HEFT,
@@ -68,15 +69,42 @@ scheduler_map = {
   "IHEFT": IHEFT,
   "DLS": DLS,
 }
-scheduler_class = scheduler_map[args.scheduler]
-scheduler = scheduler_class(simulator)
+
+def load_workflow(path: pathlib.Path) -> wfinstances.Instance:
+  return wfinstances.Instance(
+    input_instance=path,
+    logger=logger,
+  )
+
+def run_scheduler(algorithm: str, path: pathlib.Path, visualizer: SchedulerVisualizer | None = None) -> SimulationMetrics:
+  workflow = load_workflow(path)
+  simulator = Simulator(workflow, bandwidth=1250, logger=logger)
+  scheduler_class = scheduler_map[algorithm]
+  scheduler = scheduler_class(simulator)
+  return simulator.start(scheduler, visualizer=visualizer)
+
+if args.compare:
+  if args.visualize:
+    logger.warning("--visualize is ignored when --compare is enabled.")
+
+  algorithms = list(scheduler_map.keys())
+
+  metrics_by_algorithm: dict[str, SimulationMetrics] = {}
+  for algorithm in algorithms:
+    metrics_by_algorithm[algorithm] = run_scheduler(algorithm, dag_path)
+
+  plot_metric_comparison(algorithms, metrics_by_algorithm, dag_path.name)
+  sys.exit(0)
 
 visualizer = None
-if args.visualize:
+if args.visualize and args.scheduler:
   visualizer = SchedulerVisualizer(
     title=f"Task Scheduling - {args.scheduler}",
     animate=True,
     frame_delay=0.03,
   )
 
-simulator.start(scheduler, visualizer=visualizer)
+if args.scheduler:
+  run_scheduler(args.scheduler, dag_path, visualizer)
+else:
+  logger.error("No scheduler selected. Use --scheduler to select an algorithm or --compare to run all algorithms.")

@@ -156,7 +156,7 @@ class Simulator:
 
     self.logger.info(f"Critical path: {' -> '.join(self.CP)}")
 
-  def report(self):
+  def report(self) -> SimulationMetrics:
     metrics = SimulationMetrics(
       _history=self.history,
       _instance=self.instance,
@@ -164,8 +164,9 @@ class Simulator:
       _execution_cost=self.execution_cost,
     )
     metrics.log(self.logger)
+    return metrics
 
-  def start(self, scheduler: Scheduler, visualizer=None):
+  def start(self, scheduler: Scheduler, visualizer=None) -> SimulationMetrics:
     self.logger.info(f"Starting scheduler...")
     
     self.ready_tasks.append(self.start_task.task_id)
@@ -231,10 +232,10 @@ class Simulator:
           if child_id not in self.ready_tasks:
             self.ready_tasks.append(child_id)
 
-    self.report()
-
     if visualizer is not None and hasattr(visualizer, "finalize"):
       visualizer.finalize()
+
+    return self.report()
 
   def calculate_task_runtime(self, task: Task, processor: Processor) -> float:
     if task.task_id.startswith("artificial_"):
