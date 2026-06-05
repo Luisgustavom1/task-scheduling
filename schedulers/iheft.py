@@ -8,6 +8,7 @@ class IHEFT(Scheduler):
     self.name = "IHEFT"
     self.sim = simulator
     self._rank_proposed: Dict[str, float] = {}
+    self._weight_cache: Dict[str, float] = {}
 
   def schedule(self) -> tuple[str, str]:
     if not self._rank_proposed:
@@ -92,10 +93,14 @@ class IHEFT(Scheduler):
     return self._rank_proposed[ni]
   
   def weight(self, ni: str) -> float:
+    if ni in self._weight_cache:
+      return self._weight_cache[ni]
+
     highest = max(self.sim.execution_cost[ni].values())
     lowest = min(self.sim.execution_cost[ni].values())
 
     if highest == 0 or lowest == 0:
       return 0.0
 
-    return abs((highest - lowest) / (highest / lowest))
+    self._weight_cache[ni] = abs((highest - lowest) / (highest / lowest))
+    return self._weight_cache[ni]

@@ -3,6 +3,7 @@ import logging
 import pathlib
 import sys
 
+from schedulers.dls import DLS
 from schedulers.peft import PEFT
 from simulator import Simulator
 from wfcommons import wfinstances
@@ -22,7 +23,7 @@ parser.add_argument(
 parser.add_argument(
   "--scheduler",
   default="HEFT",
-  choices=["HEFT", "PEFT", "IPEFT", "IHEFT"],
+  choices=["HEFT", "PEFT", "IPEFT", "IHEFT", "DLS"],
   help="Select scheduling algorithm.",
 )
 parser.add_argument(
@@ -65,6 +66,7 @@ scheduler_map = {
   "PEFT": PEFT,
   "IPEFT": IPEFT,
   "IHEFT": IHEFT,
+  "DLS": DLS,
 }
 scheduler_class = scheduler_map[args.scheduler]
 scheduler = scheduler_class(simulator)
