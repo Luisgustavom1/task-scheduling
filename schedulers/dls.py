@@ -1,12 +1,14 @@
 from typing import Dict
-from schedulers.scheduler import Scheduler, Task
+from schedulers.scheduler import Scheduler
 from simulator import Simulator
+import statistics
 
 class DLS(Scheduler):
   def __init__(self, simulator: Simulator):
     self.name = "DLS"
     self.sim = simulator
     self._rank: Dict[str, float] = {}
+    self._SL_cache: Dict[str, float] = {}
 
   def schedule(self) -> tuple[str, str]:
     if not self._rank:
@@ -27,12 +29,12 @@ class DLS(Scheduler):
 
     self.sim.ready_tasks.remove(task_id)
 
-    max_dl = 0.0
+    max_dl = -float('inf')
     best_processor = None
 
     for p_id in self.sim.processors:
       dl = self.DL(task_id, p_id)
-      if abs(dl) > max_dl:
+      if dl > max_dl:
         max_dl = dl
         best_processor = p_id
 
@@ -59,8 +61,10 @@ class DLS(Scheduler):
   # directed path from N, to an endnode of the graph, over all
   # endnodes of the graph
   def SL(self, ni: str) -> float:
+    if ni in self._SL_cache:
+      return self._SL_cache[ni]
+
     if ni not in self.sim.workflow.tasks_children:
-      self._rank[ni] = 0.0
       return 0.0
 
     max_succ_weight = 0.0
@@ -71,18 +75,74 @@ class DLS(Scheduler):
       if weight > max_succ_weight:
         max_succ_weight = weight
 
-    exec_time_avg = sum(self.sim.execution_cost[ni].values()) / len(self.sim.execution_cost[ni])
-    self._rank[ni] = exec_time_avg + max_succ_weight
-    return self._rank[ni]
+    exec_time_avg = self.E(ni)
+    self._SL_cache[ni] = exec_time_avg + max_succ_weight
+    return self._SL_cache[ni]
+
+  def E(self, ni: str) -> float:
+    execution_times = list(self.sim.execution_cost[ni].values())
+    return statistics.median(execution_times)
+
+  def delta(self, ni: str, pj: str) -> float:
+    return self.E(ni) - self.sim.execution_cost[ni].get(pj, 0.0)
 
   # maximization term represents the earliest time that node N ,
   # can start execution on processor PI
   # defined by -> DL(ni, pj) = SL(Ni) - max[DA(ni, pj)]
   def DL(self, ni: str, pj: str) -> float:
     sl = self.SL(ni)
+
+    tf = self.sim.processors[pj].available_at
     da = self.DA(ni, pj)
 
-    return sl - da
+    delta = self.delta(ni, pj)
+
+    dl_1 = sl - max(da, tf) + delta
+    dc = self.DC(ni, pj)
+
+    return dl_1 + dc
+
+  def DC(self, ni: str, pj: str) -> float:
+    descendant = self.D(ni)
+    if descendant is None:
+      return 0.0
+
+    e = self.E(descendant)
+    exec_time = self.sim.execution_cost[descendant].get(pj, 0.0)
+    f = self.F(ni, descendant, pj)
+
+    return e - min(f, exec_time)
+  
+  def F(self, ni: str, d_ni: str, pj: str) -> float:
+    comm_cost = self.sim.calc_communication_cost(ni, d_ni)
+    min_exec_time = float('inf')
+
+    for pk in self.sim.processors:
+      if pk == pj:
+        continue
+
+      exec_time = self.sim.execution_cost[d_ni].get(pk, 0.0)
+      if exec_time < min_exec_time:
+        min_exec_time = exec_time
+    
+    if min_exec_time == float('inf'):
+      self.sim.logger.warning(f"No execution time found for descendant {d_ni} on any processor other than {pj}. Assuming 0.0.")
+      return 0.0
+
+    return comm_cost + min_exec_time
+  
+  # we consider the descendant to which Ni, passes the most data,
+  def D(self, ni: str) -> str | None:
+    max_comm_cost = 0.0
+    descendant_id = None
+    for succ_id in self.sim.workflow.tasks_children[ni]:
+      comm_cost = self.sim.calc_communication_cost(ni, succ_id)
+      if comm_cost > max_comm_cost:
+        max_comm_cost = comm_cost
+        descendant_id = succ_id
+
+    return descendant_id
+
 
   # Earliest time that all data required by node N , is available
   # at processor P3 at state C ( t ) . This quantity, calculated within
@@ -97,8 +157,8 @@ class DLS(Scheduler):
       if pred_processor is None:
         raise RuntimeError(f"Predecessor task {pred_id} has not been allocated to any processor.")
 
+      pred_finish_time = self.sim.completed_tasks.get(pred_id, 0.0)
       comm_cost = self.sim.calc_communication_cost(pred_id, ni, pj)
-      exec_time = self.sim.execution_cost[pred_id].get(pred_processor, 0.0)
-      earliest_data_available = max(earliest_data_available, comm_cost + exec_time)
+      earliest_data_available = max(earliest_data_available, comm_cost + pred_finish_time)
 
     return earliest_data_available
