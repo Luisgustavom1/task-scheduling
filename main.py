@@ -79,9 +79,9 @@ def load_workflow(path: pathlib.Path) -> wfinstances.Instance:
 def run_scheduler(algorithm: str, path: pathlib.Path, visualizer: SchedulerVisualizer | None = None) -> SimulationMetrics:
   workflow = load_workflow(path)
   simulator = Simulator(workflow, bandwidth=1250, logger=logger)
-  scheduler_class = scheduler_map[algorithm]
-  scheduler = scheduler_class(simulator)
-  return simulator.start(scheduler, visualizer=visualizer)
+  scheduler = scheduler_map[algorithm](simulator)
+  simulator.start(scheduler, visualizer=visualizer)
+  return SimulationMetrics(simulator)
 
 if args.compare:
   if args.visualize:
@@ -105,6 +105,7 @@ if args.visualize and args.scheduler:
   )
 
 if args.scheduler:
-  run_scheduler(args.scheduler, dag_path, visualizer)
+  metrics = run_scheduler(args.scheduler, dag_path, visualizer)
+  metrics.log(logger)
 else:
   logger.error("No scheduler selected. Use --scheduler to select an algorithm or --compare to run all algorithms.")
