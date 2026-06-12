@@ -2,8 +2,8 @@ from collections import deque
 import logging
 from typing import Dict, cast
 
-from metrics import SimulationMetrics
 from schedulers.scheduler import Instance, Scheduler, Task, Workflow, Processor
+from common import convert_machine_speed, file_size_in_mb
 
 class Simulator:
   def __init__(self, instance: Instance, bandwidth: float, logger: logging.Logger | None = None):
@@ -116,7 +116,10 @@ class Simulator:
         task_j: Task = self.workflow.tasks[task_id_j]
 
         shared_files = set(task_i.output_files) & set(task_j.input_files)
-        total_size = sum(f.size for f in shared_files)
+        total_size = sum(
+          file_size_in_mb(f.size, self.instance.runtime_system["name"])
+          for f in shared_files
+        )
         # maybe this calculation of communication cost is wrong
         self._communication_cost[task_id_i][task_id_j] = total_size / self.bandwidth
   
@@ -156,17 +159,7 @@ class Simulator:
 
     self.logger.info(f"Critical path: {' -> '.join(self.CP)}")
 
-  def report(self) -> SimulationMetrics:
-    metrics = SimulationMetrics(
-      _history=self.history,
-      _instance=self.instance,
-      _CP=self.CP,
-      _execution_cost=self.execution_cost,
-    )
-    metrics.log(self.logger)
-    return metrics
-
-  def start(self, scheduler: Scheduler, visualizer=None) -> SimulationMetrics:
+  def start(self, scheduler: Scheduler, visualizer=None):
     self.logger.info(f"Starting scheduler...")
     
     self.ready_tasks.append(self.start_task.task_id)
@@ -190,7 +183,6 @@ class Simulator:
         continue
 
       processor_to_run = self.processors[machine_id]
-      free_time = processor_to_run.available_at
       
       duration = self.calculate_task_runtime(task, processor_to_run)
       end_time = start_time + duration
@@ -235,22 +227,25 @@ class Simulator:
     if visualizer is not None and hasattr(visualizer, "finalize"):
       visualizer.finalize()
 
-    return self.report()
+    return
 
   def calculate_task_runtime(self, task: Task, processor: Processor) -> float:
     if task.task_id.startswith("artificial_"):
       return 0.0
     
     if task.machines is None or len(task.machines) == 0 or len(task.machines) > 1:
-      self.logger.warning(f"Task {task.task_id} has no specific machine or multiple machines on execution specs, using default runtime.")
-      return task.runtime
+      raise ValueError(f"Task {task.task_id} has no specific machine or multiple machines on execution specs, using default runtime.")
 
     machine_runner = task.machines[0]
-    if not machine_runner:
-      return task.runtime
-    
-    return (task.runtime * max(processor.cpu_speed, 1)) / max(machine_runner.cpu_speed, 1)
-  
+    machine_runner_speed = convert_machine_speed(machine_runner.cpu_speed)
+    task_cores = task.cores or 1
+
+    flops = task.runtime * machine_runner_speed * task_cores
+
+    processor_speed = convert_machine_speed(processor.cpu_speed)
+
+    return flops / processor_speed / task_cores
+
   def calc_communication_cost(self, task_id_i: str, task_id_j: str, possible_processor_j: str | None = None) -> float:
     if possible_processor_j is not None and self.task_allocation.get(task_id_i) == possible_processor_j:
       return 0
