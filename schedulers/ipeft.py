@@ -70,17 +70,12 @@ class IPEFT(Scheduler):
 
     self.cnct[key] = max_cnct
     return max_cnct
-  
-  def calc_eft(self, ti: str, pj: str) -> float:
-    est, _, _ = self.sim.calc_est(ti, pj)
-    execution_time = self.sim.execution_cost[ti].get(pj, 0)
-    return est + execution_time
 
   def calc_eft_cnct(self, vi: str, pj: str) -> float:
     if self.cnp(vi):
-      return self.calc_eft(vi, pj)
+      return self.sim.calc_eft(vi, pj)
     
-    return self.calc_eft(vi, pj) + self.calc_cnct(vi, pj)
+    return self.sim.calc_eft(vi, pj) + self.calc_cnct(vi, pj)
 
   def calc_aft(self, ni: str) -> float:
     aft = self.sim.completed_tasks[ni]

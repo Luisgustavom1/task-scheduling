@@ -166,8 +166,7 @@ class Simulator:
 
     while len(self.completed_tasks) < len(self.workflow.tasks):
       if not self.ready_tasks:
-        self.logger.warning("No ready tasks, but workflow is not complete. Possible deadlock or missing dependencies.")
-        break
+        raise RuntimeError("No ready tasks, but workflow is not complete. Possible deadlock or missing dependencies.")
 
       action = scheduler.schedule()
       self.logger.debug(f"Scheduler selected action: {action}")
@@ -185,7 +184,6 @@ class Simulator:
       duration = self.calculate_task_runtime(task, processor_to_run)
       end_time = start_time + duration
 
-      # TODO: available_at maybe should be unnecessary because insertion based
       processor_to_run.available_at = max(processor_to_run.available_at, end_time)
       self.completed_tasks[task_id] = end_time
       self.task_allocation[task_id] = machine_id
@@ -209,8 +207,6 @@ class Simulator:
           end_time=end_time,
           ready_time=start_time,
         )
-
-      self.logger.debug(f"task {task_id} escalonada para máquina {machine_id} ({start_time}s -> {end_time}s)")
 
       for child_id in self.workflow.tasks_children.get(task_id, []):
         parents: Dict[str, set[str]] = self.workflow.tasks_parents
@@ -260,7 +256,12 @@ class Simulator:
 
     return self._communication_cost.get(ti, {}).get(tk, 0.0)
 
-  # return est time and the communication cost to run task ti on processor pj (insertion based)
+  def calc_eft(self, ti: str, pj: str) -> float:
+    est, _, _ = self.calc_est(ti, pj)
+    execution_time = self.execution_cost[ti].get(pj, 0)
+    return est + execution_time
+
+  # return est and the communication cost to run task ti on processor pj (insertion based)
   # est -> the earliest time that task ti can start on processor pj considering the finish time of its parent tasks and the communication cost
   # start_time, communication_cost, data_ready_time
   def calc_est(self, task_id: str, processor_id: str) -> tuple[float, float, float]:

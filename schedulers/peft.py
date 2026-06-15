@@ -28,18 +28,13 @@ class PEFT(Scheduler):
     min_optimistic_eft = float('inf')
 
     for pj in self.sim.processors:
-      optimistic_eft = self.calc_eft(task_id, pj) + self.calc_oct(task_id, pj)
+      optimistic_eft = self.sim.calc_eft(task_id, pj) + self.calc_oct(task_id, pj)
 
       if optimistic_eft < min_optimistic_eft:
         min_optimistic_eft = optimistic_eft
         best_processor = pj
 
     return task_id, best_processor
-
-  def calc_eft(self, ti: str, pj: str) -> float:
-    est, _, _ = self.sim.calc_est(ti, pj)
-    execution_time = self.sim.execution_cost[ti].get(pj, 0)
-    return est + execution_time
   
   def calc_aft(self, ni: str) -> float:
     aft = self.sim.completed_tasks[ni]

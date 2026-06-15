@@ -156,7 +156,7 @@ class DLS(Scheduler):
   def DA(self, ni: str, pj: str) -> float:
     earliest_data_available = 0.0
     for pred_id in self.sim.workflow.tasks_parents[ni]:
-      pred_processor = self.sim.task_allocation.get(pred_id)
+      pred_processor = self.sim.completed_tasks.get(pred_id)
       if pred_processor is None:
         raise RuntimeError(f"Predecessor task {pred_id} has not been allocated to any processor.")
 
