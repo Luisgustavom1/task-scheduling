@@ -25,19 +25,17 @@ class DLS(Scheduler):
       self.sim.workflow.tasks[tid].priority,         # 2. Lowest priority first (Ascending)
     ))
 
-    candidate_count = min(3, len(unescheduled_tasks))
-    candidates = unescheduled_tasks[:candidate_count]
-
-    max_gdl = -float('inf')
+    best_dl = -float('inf')
     best_processor = None
     task_id = None
-
-    for tid in candidates:
-      gdl, pid = self.GDL(tid)
-      if gdl > max_gdl:
-        max_gdl = gdl
-        best_processor = pid
-        task_id = tid
+    
+    for tid in unescheduled_tasks:
+      for pj in self.sim.processors:
+        dl = self.DL(tid, pj)
+        if dl > best_dl:
+          best_dl = dl
+          best_processor = pj
+          task_id = tid
 
     if task_id is None or best_processor is None:
       raise RuntimeError("Unable to select a task and processor for scheduling.")
@@ -96,51 +94,17 @@ class DLS(Scheduler):
 
   def delta(self, ni: str, pj: str) -> float:
     return self.E(ni) - self.get_execution_time(ni, pj)
-
-  def GDL(self, ni: str) -> tuple[float, str]:
-    preferred_processor = None
-    highest_dl = -float('inf')
-    second_highest_dl = -float('inf')
-
-    for pj in self.sim.processors:
-      dl = self.DL_2(ni, pj)
-      if dl > highest_dl:
-        highest_dl = dl
-        preferred_processor = pj
-
-    if not preferred_processor:
-      raise RuntimeError(f"Unable to determine preferred processor for task {ni}.")
-
-    for pj in self.sim.processors:
-      if pj == preferred_processor:
-        continue
-
-      dl = self.DL_2(ni, pj)
-      if dl > second_highest_dl:
-        second_highest_dl = dl
-
-    if highest_dl > second_highest_dl and second_highest_dl != -float('inf'):
-      cost = highest_dl - second_highest_dl
-    else:
-      cost = 0.0
-
-    return highest_dl + cost, preferred_processor
-
   # maximization term represents the earliest time that node N ,
   # can start execution on processor PI
-  # defined by -> DL(ni, pj) = SL(Ni) - max[DA(ni, pj)]
-  def DL_2(self, ni: str, pj: str) -> float:
+  # defined by -> DL(ni, pj) = SL(Ni) - max[DA(ni, pj)] + delta(ni, pj)
+  def DL(self, ni: str, pj: str) -> float:
     sl = self.SL(ni)
 
     tf = self.sim.processors[pj].available_at
     da = self.DA(ni, pj)
-
     delta = self.delta(ni, pj)
 
-    dl_1 = sl - max(da, tf) + delta
-    dc = self.DC(ni, pj)
-
-    return dl_1 + dc
+    return sl - max(da, tf) + delta
 
   def DC(self, ni: str, pj: str) -> float:
     descendant = self.D(ni)
