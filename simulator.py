@@ -185,7 +185,7 @@ class Simulator:
       duration = self.calculate_task_runtime(task, processor_to_run)
       end_time = start_time + duration
 
-
+      # TODO: available_at maybe should be unnecessary because insertion based
       processor_to_run.available_at = max(processor_to_run.available_at, end_time)
       self.completed_tasks[task_id] = end_time
       self.task_allocation[task_id] = machine_id
@@ -260,8 +260,9 @@ class Simulator:
 
     return self._communication_cost.get(ti, {}).get(tk, 0.0)
 
-  # return est time and the communication cost to run task ti on processor pj
+  # return est time and the communication cost to run task ti on processor pj (insertion based)
   # est -> the earliest time that task ti can start on processor pj considering the finish time of its parent tasks and the communication cost
+  # start_time, communication_cost, data_ready_time
   def calc_est(self, task_id: str, processor_id: str) -> tuple[float, float, float]:
     execution_time = self.execution_cost[task_id].get(processor_id, 0.0)
     communication_cost = 0.0
@@ -281,6 +282,7 @@ class Simulator:
       return data_ready_time, communication_cost, data_ready_time
 
     first_task_start = schedules[0].start
+    # will be finished before the first task starts, so we can schedule it at data_ready_time
     if data_ready_time + execution_time <= first_task_start:
       return data_ready_time, communication_cost, data_ready_time
 
