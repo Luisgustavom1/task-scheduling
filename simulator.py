@@ -3,7 +3,7 @@ import logging
 from typing import Dict, cast
 
 from schedulers.scheduler import Instance, Scheduler, Task, Workflow, Processor
-from common import convert_machine_speed, file_size_in_mb
+from common import convert_machine_speed, file_size_in_mb, History
 
 class Simulator:
   def __init__(self, instance: Instance, bandwidth: float, logger: logging.Logger | None = None):
@@ -18,7 +18,7 @@ class Simulator:
       setattr(processor, "available_at", 0.0)
 
     self.completed_tasks = {} # task_id -> end_time
-    self.history = []
+    self.history: Dict[str, list[History]] = {} # machine_id -> history of scheduled tasks on that machine
 
     self.start_task: Task = self.build_artifical_tasks("artificial_entry_point", priority=1)
     self.exit_task: Task = self.build_artifical_tasks("artificial_exit_point", priority=int(1e9))
@@ -29,9 +29,6 @@ class Simulator:
     self.avg_execution_cost: Dict[str, float] = {} # task_id -> average runtime across all machines
     self._communication_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> cost
     self.CP = [] # critical path tasks
-    self.processor_schedules: Dict[str, list[tuple[float, float]]] = { # processor_id -> list of (start_time, end_time) for scheduled tasks
-      p_id: [] for p_id in self.processors
-    }
 
     self.normalizeStartTasks()
     self.normalizeExitTasks()
@@ -173,6 +170,7 @@ class Simulator:
         break
 
       action = scheduler.schedule()
+      self.logger.debug(f"Scheduler selected action: {action}")
 
       task_id, machine_id = action
 
@@ -180,29 +178,27 @@ class Simulator:
 
       task: Task | None = self.workflow.tasks.get(task_id)
       if task is None:
-        continue
+        raise ValueError(f"Task {task_id} not found in workflow.") 
 
       processor_to_run = self.processors[machine_id]
       
       duration = self.calculate_task_runtime(task, processor_to_run)
       end_time = start_time + duration
 
-      self.processor_schedules[machine_id].append((start_time, end_time))
-      self.processor_schedules[machine_id].sort(key=lambda x: x[0])
 
       processor_to_run.available_at = max(processor_to_run.available_at, end_time)
       self.completed_tasks[task_id] = end_time
       self.task_allocation[task_id] = machine_id
 
-      history = {
-        "task_id": task_id,
-        "processor_id": machine_id,
-        "start": start_time,
-        "end": end_time,
-        "communication_cost": communication_cost,
-        "data_ready_time": data_ready_time,
-      }
-      self.history.append(history)
+      history = History(
+        task_id=task_id,
+        processor_id=machine_id,
+        start=start_time,
+        end=end_time,
+        communication_cost=communication_cost,
+        data_ready_time=data_ready_time,
+      )
+      self.add_history(history)
       self.logger.debug(f"history computed {history}")
 
       if visualizer is not None and hasattr(visualizer, "on_task_scheduled"):
@@ -228,6 +224,12 @@ class Simulator:
       visualizer.finalize()
 
     return
+
+  def add_history(self, history: History):
+    if history.processor_id not in self.history:
+      self.history[history.processor_id] = []
+    self.history[history.processor_id].append(history)
+    self.history[history.processor_id].sort(key=lambda x: x.start)
 
   def calculate_task_runtime(self, task: Task, processor: Processor) -> float:
     if task.task_id.startswith("artificial_"):
@@ -274,11 +276,11 @@ class Simulator:
       communication_cost += comm_cost
       data_ready_time = max(data_ready_time, parent_finish + comm_cost)
 
-    schedules = self.processor_schedules[processor_id]
+    schedules = self.history.get(processor_id)
     if not schedules:
       return data_ready_time, communication_cost, data_ready_time
 
-    first_task_start = schedules[0][0]
+    first_task_start = schedules[0].start
     if data_ready_time + execution_time <= first_task_start:
       return data_ready_time, communication_cost, data_ready_time
 
@@ -288,11 +290,11 @@ class Simulator:
     # ... gap 3 time (5, 10) -> 10 - 5 = 5
     # (10, 12)
     for i in range(len(schedules) - 1):
-      gap_start = max(data_ready_time, schedules[i][1]) # max(data_ready_time, end of prev task)
-      gap_end = schedules[i + 1][0] # start of next task
+      gap_start = max(data_ready_time, schedules[i].end) # max(data_ready_time, end of prev task)
+      gap_end = schedules[i + 1].start # start of next task
 
       if gap_end - gap_start >= execution_time:
         return gap_start, communication_cost, data_ready_time
 
-    process_available_at = schedules[-1][1]
+    process_available_at = schedules[-1].end
     return max(process_available_at, data_ready_time), communication_cost, data_ready_time

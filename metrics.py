@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
-from schedulers.scheduler import Instance
+from common import History
 from simulator import Simulator
 
 @dataclass(slots=True)
@@ -12,6 +12,10 @@ class SimulationMetrics:
   _load_balance: float | None = None
   _communication_cost: float | None = None
   _total_wait_time: float | None = None
+  _history: list[History] = field(default_factory=list)
+
+  def __post_init__(self):
+    self._history = [item for sublist in self._sim.history.values() for item in sublist]
 
   def makespan(self) -> float:
     if self._makespan == 0.0:
@@ -40,9 +44,9 @@ class SimulationMetrics:
 
     proc_workload: dict[str, float] = {}
 
-    for entry in self._sim.history:
-      pid = entry["processor_id"]
-      duration = entry["end"] - entry["start"]
+    for entry in self._history:
+      pid = entry.processor_id
+      duration = entry.end - entry.start
       if pid not in proc_workload:
         proc_workload[pid] = 0.0
       proc_workload[pid] += duration
@@ -61,16 +65,16 @@ class SimulationMetrics:
   def communicationCost(self) -> float:
     if self._communication_cost is not None:
       return self._communication_cost
-    self._communication_cost = sum(entry.get("communication_cost", 0.0) for entry in self._sim.history)
+    self._communication_cost = sum(entry.communication_cost for entry in self._history)
     return self._communication_cost
 
   def totalWaitTime(self) -> float:
     if self._total_wait_time is not None:
       return self._total_wait_time
     total = 0.0
-    for entry in self._sim.history:
-      start = float(entry.get("start", 0.0))
-      data_ready = float(entry.get("data_ready_time", 0.0))
+    for entry in self._history:
+      start = float(entry.start)
+      data_ready = float(entry.data_ready_time)
       total += max(0.0, start - data_ready)
     self._total_wait_time = total
     return self._total_wait_time
