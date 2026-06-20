@@ -53,11 +53,11 @@ Other available parameters:
 - [ ] Consider parallelism on processors
 
 ### Algorithms
-- [X] HEFT
+- [XX] HEFT
 - [X] PEFT
 - [X] IPEFT
-- [] IHEFT
-- [] DLS
+- [X] IHEFT
+- [X] DLS
 
 ### Metrics
 - [X] Makespan
