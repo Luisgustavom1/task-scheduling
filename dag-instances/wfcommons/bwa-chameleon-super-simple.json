@@ -1542,7 +1542,7 @@
                     "writtenBytes": 496000,
                     "memoryInBytes": 3000000,
                     "machines": [
-                        "worker-4.novalocal"
+                        "worker-1.novalocal"
                     ]
                 },
                 {
@@ -1569,7 +1569,7 @@
                     "writtenBytes": 1000000,
                     "memoryInBytes": 5000000,
                     "machines": [
-                        "worker-4.novalocal"
+                        "worker-1.novalocal"
                     ]
                 },
                 {
@@ -1590,13 +1590,13 @@
                             "query.fastq.2.err"
                         ]
                     },
-                    "coreCount": 1,
+                    "coreCount": 2,
                     "avgCPU": 76.3476,
                     "readBytes": 167477000,
                     "writtenBytes": 500000,
                     "memoryInBytes": 3000000,
                     "machines": [
-                        "worker-3.novalocal"
+                        "worker-1.novalocal"
                     ]
                 }
             ],
@@ -1604,25 +1604,7 @@
                 {
                     "nodeName": "worker-1.novalocal",
                     "cpu": {
-                        "coreCount": 24
-                    }
-                },
-                {
-                    "nodeName": "worker-4.novalocal",
-                    "cpu": {
-                        "coreCount": 24
-                    }
-                },
-                {
-                    "nodeName": "worker-3.novalocal",
-                    "cpu": {
-                        "coreCount": 24
-                    }
-                },
-                {
-                    "nodeName": "worker-2.novalocal",
-                    "cpu": {
-                        "coreCount": 24
+                        "coreCount": 2
                     }
                 }
             ]

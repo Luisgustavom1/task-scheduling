@@ -1,6 +1,8 @@
 from collections import deque
+from dataclasses import asdict
 import logging
 from typing import Dict, cast
+import json
 
 from schedulers.scheduler import Instance, Scheduler, Task, Workflow, Processor
 from common import convert_machine_speed, file_size_in_mb, History
@@ -184,7 +186,6 @@ class Simulator:
       duration = self.calculate_task_runtime(task, processor_to_run)
       end_time = start_time + duration
 
-      processor_to_run.available_at = max(processor_to_run.available_at, end_time)
       self.completed_tasks[task_id] = end_time
       self.task_allocation[task_id] = machine_id
 
@@ -218,6 +219,14 @@ class Simulator:
 
     if visualizer is not None and hasattr(visualizer, "finalize"):
       visualizer.finalize()
+    
+    serializable_history = {
+        machine_id: [asdict(h) for h in history_list]
+        for machine_id, history_list in self.history.items()
+    }
+    
+    formatted_history = json.dumps(serializable_history, indent=4)
+    self.logger.info("Scheduling complete.\n%s", formatted_history)
 
     return
 
@@ -266,11 +275,17 @@ class Simulator:
   # start_time, communication_cost, data_ready_time
   def calc_est(self, task_id: str, processor_id: str) -> tuple[float, float, float]:
     execution_time = self.execution_cost[task_id].get(processor_id, 0.0)
-    communication_cost = 0.0
-    data_ready_time = 0
-    for p_id_parent in self.workflow.tasks_parents[task_id]:
-      parent_finish = self.completed_tasks[p_id_parent]
+    processor_cores = self.processors[processor_id].cpu_cores or 1
+    task_cores = self.workflow.tasks[task_id].cores or 1
 
+    if task_cores > processor_cores:
+      raise ValueError(f"Task {task_id} requires {task_cores} cores, but processor {processor_id} only has {processor_cores}.")
+
+    communication_cost = 0.0
+    data_ready_time = 0.0
+
+    for p_id_parent in self.workflow.tasks_parents[task_id]:
+      parent_finish = self.completed_tasks.get(p_id_parent) 
       if parent_finish is None:
         raise ValueError(f"Parent task {p_id_parent} of task {task_id} has not been completed yet.")
 
@@ -282,22 +297,49 @@ class Simulator:
     if not schedules:
       return data_ready_time, communication_cost, data_ready_time
 
-    first_task_start = schedules[0].start
-    # will be finished before the first task starts, so we can schedule it at data_ready_time
-    if data_ready_time + execution_time <= first_task_start:
-      return data_ready_time, communication_cost, data_ready_time
+    candidate_times = [data_ready_time] + [s.end for s in schedules if s.end >= data_ready_time]
+    candidate_times = sorted(list(set(candidate_times))) 
 
-    # schedules
-    # (0, 3)
-    # (3, 5)
-    # ... gap 3 time (5, 10) -> 10 - 5 = 5
-    # (10, 12)
-    for i in range(len(schedules) - 1):
-      gap_start = max(data_ready_time, schedules[i].end) # max(data_ready_time, end of prev task)
-      gap_end = schedules[i + 1].start # start of next task
+    for t_start in candidate_times:
+      # TODO: we need consider communication cost here??
+      t_end = t_start + execution_time
+      
+      if self.has_enough_cores(processor_id, t_start, t_end, task_cores):
+        return t_start, communication_cost, data_ready_time
 
-      if gap_end - gap_start >= execution_time:
-        return gap_start, communication_cost, data_ready_time
-
-    process_available_at = schedules[-1].end
+    process_available_at = max((s.end for s in schedules), default=0)
     return max(process_available_at, data_ready_time), communication_cost, data_ready_time
+
+  def has_enough_cores(self, processor_id: str, start_time: float, end_time: float, task_cores: int) -> bool:
+    processor_cores = self.processors[processor_id].cpu_cores or 1
+    schedules = self.history.get(processor_id, [])
+    
+    cores_in_use = 0
+    events = []
+    
+    for s in schedules:
+      task = self.workflow.tasks[s.task_id]
+      t_cores = task.cores or 1
+      
+      overlap = s.start < end_time and s.end > start_time
+      if overlap:
+        if s.start <= start_time:
+          cores_in_use += t_cores
+        else:
+          events.append((s.start, t_cores))
+        
+        if s.end < end_time:
+          events.append((s.end, -t_cores))
+
+    if processor_cores - cores_in_use < task_cores:
+      return False
+
+    events.sort(key=lambda x: (x[0], x[1]))
+    
+    current_active = cores_in_use 
+    for t, core_change in events:
+      current_active += core_change
+      if processor_cores - current_active < task_cores:
+        return False
+        
+    return True

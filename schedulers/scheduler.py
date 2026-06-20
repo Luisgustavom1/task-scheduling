@@ -9,7 +9,7 @@ Instance = wfinstances.Instance
 Workflow = common.Workflow
 
 class Processor(common.Machine):
-  available_at: float
+  pass
 
 class Scheduler(ABC):
   @abstractmethod
