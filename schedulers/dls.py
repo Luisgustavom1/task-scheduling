@@ -94,13 +94,14 @@ class DLS(Scheduler):
 
   def delta(self, ni: str, pj: str) -> float:
     return self.E(ni) - self.get_execution_time(ni, pj)
+
   # maximization term represents the earliest time that node N ,
   # can start execution on processor PI
   # defined by -> DL(ni, pj) = SL(Ni) - max[DA(ni, pj)] + delta(ni, pj)
   def DL(self, ni: str, pj: str) -> float:
     sl = self.SL(ni)
 
-    tf = self.sim.processors[pj].available_at
+    tf = max((schedule.end for schedule in self.sim.history.get(pj, [])), default=0.0)
     da = self.DA(ni, pj)
     delta = self.delta(ni, pj)
 
