@@ -54,9 +54,9 @@ Other available parameters:
 
 ### Algorithms
 - [XX] HEFT
+- [XX] IHEFT
 - [X] PEFT
 - [X] IPEFT
-- [X] IHEFT
 - [X] DLS
 
 ### Metrics

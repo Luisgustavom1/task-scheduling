@@ -186,6 +186,9 @@ class Simulator:
       duration = self.calculate_task_runtime(task, processor_to_run)
       end_time = start_time + duration
 
+      if task_id in self.completed_tasks:
+        raise RuntimeError(f"Task {task_id} has already been completed. Cannot schedule it again.")
+
       self.completed_tasks[task_id] = end_time
       self.task_allocation[task_id] = machine_id
 
