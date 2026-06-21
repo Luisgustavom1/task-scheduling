@@ -9,6 +9,7 @@ class IPEFT(Scheduler):
     self.aest = {} # average earliest start time
     self.alst = {} # average latest start time
     self.rank_pct: Dict[str, float] = {}
+    self.pct_cache: Dict[str, Dict[str, float]] = {}
     self.cnct: Dict[tuple[str, str], float] = {}
 
   def schedule(self) -> tuple[str, str]:
@@ -18,9 +19,8 @@ class IPEFT(Scheduler):
 
     # tasks with all parents completed and not yet scheduled
     unescheduled_tasks = [
-      self.sim.workflow.tasks[tid] for tid in self.sim.workflow.tasks 
-      if tid not in self.sim.completed_tasks and 
-      all(p in self.sim.completed_tasks for p in self.sim.workflow.tasks_parents[tid])
+      self.sim.workflow.tasks[tid] for tid in self.sim.ready_tasks
+      if tid not in self.sim.completed_tasks
     ]
 
     # select task with highest upward rank
@@ -31,58 +31,25 @@ class IPEFT(Scheduler):
     min_optimistic_eft = float('inf')
 
     for pj in self.sim.processors:
-      optimistic_eft = self.calc_eft_cnct(task_id, pj)
+      eft_cnct = self.sim.calc_eft(task_id, pj)
 
-      if optimistic_eft < min_optimistic_eft:
-        min_optimistic_eft = optimistic_eft
+      if not self.cnp(task_id):
+        eft_cnct += self.calc_cnct(task_id, pj)
+
+      if eft_cnct < min_optimistic_eft:
+        min_optimistic_eft = eft_cnct
         best_processor = pj
 
     return task_id, best_processor
-  
+
+  # critical node parent
+  def cnp(self, ni: str) -> bool:
+    return not self.cn(ni) and any(self.cn(nm) for nm in self.sim.workflow.tasks_children[ni])
+
   # critical node
   def cn(self, ni: str) -> bool:
     return self.calc_aest(ni) == self.calc_alst(ni)
   
-  def cnp(self, ni: str) -> bool:
-    return not self.cn(ni) and any(self.cn(nm) for nm in self.sim.workflow.tasks_children[ni])
-
-  def calc_cnct(self, vi: str, pk: str) -> float:
-    key = (vi, pk)
-    if key in self.cnct:
-      return self.cnct[key]
-
-    successors = list(self.sim.workflow.tasks_children.get(vi, []))
-    if not successors:
-      self.cnct[key] = 0.0
-      return 0.0
-
-    critical_successors = [vj for vj in successors if self.cn(vj)]
-    if critical_successors:
-      successors = critical_successors
-
-    max_cnct = 0.0
-    for vj in successors:
-      min_cost = min(
-        self.calc_cnct(vj, pm) + self.sim.execution_cost[vj].get(pm, 0.0) + self.sim.avg_communication_cost(vi, pk, vj, pm)
-        for pm in self.sim.processors
-      )
-      max_cnct = max(max_cnct, min_cost)
-
-    self.cnct[key] = max_cnct
-    return max_cnct
-
-  def calc_eft_cnct(self, vi: str, pj: str) -> float:
-    if self.cnp(vi):
-      return self.sim.calc_eft(vi, pj)
-    
-    return self.sim.calc_eft(vi, pj) + self.calc_cnct(vi, pj)
-
-  def calc_aft(self, ni: str) -> float:
-    aft = self.sim.completed_tasks[ni]
-    if aft is None:
-      raise ValueError(f"task {ni} has not been completed yet.")
-    return aft
-
   # average earliest start time
   def calc_aest(self, ni: str) -> float:
     if ni in self.aest:
@@ -103,7 +70,7 @@ class IPEFT(Scheduler):
     )
 
     return self.aest[ni]
-  
+
   # average latest start time of task
   def calc_alst(self, ni: str) -> float:
     if ni in self.alst:
@@ -131,6 +98,37 @@ class IPEFT(Scheduler):
 
     return self.alst[ni]
 
+  def calc_cnct(self, vi: str, pk: str) -> float:
+    key = (vi, pk)
+    if key in self.cnct:
+      return self.cnct[key]
+
+    successors = list(self.sim.workflow.tasks_children.get(vi, []))
+    if not successors:
+      self.cnct[key] = 0.0
+      return 0.0
+
+    critical_successors = [vj for vj in successors if self.cn(vj)]
+    if critical_successors:
+      successors = critical_successors
+
+    max_cnct = 0.0
+    for vj in successors:
+      min_cost = min(
+        self.calc_cnct(vj, pm) + self.sim.execution_cost[vj].get(pm, 0.0) + self.sim.avg_communication_cost(vi, pk, vj, pm)
+        for pm in self.sim.processors
+      )
+      max_cnct = max(max_cnct, min_cost)
+
+    self.cnct[key] = max_cnct
+    return max_cnct
+
+  def calc_aft(self, ni: str) -> float:
+    aft = self.sim.completed_tasks[ni]
+    if aft is None:
+      raise ValueError(f"task {ni} has not been completed yet.")
+    return aft
+  
   # rank based on pessimistic cost table
   def calc_rank_pct(self, vi: str) -> float:
     if vi in self.rank_pct:
@@ -144,11 +142,19 @@ class IPEFT(Scheduler):
 
   # pessimistic cost table
   def calc_pct(self, vi: str, pk: str) -> float:
+    if vi in self.pct_cache and pk in self.pct_cache[vi]:
+      return self.pct_cache[vi][pk]
+
     pct = 0
     for vj in self.sim.workflow.tasks_children.get(vi, []):
       tmp = max(
-        self.calc_pct(vj, pm) + self.sim.execution_cost[vj].get(pm, 0) + (0 if pm == pk else self.sim.calc_communication_cost(vi, vj, pk))
+        self.calc_pct(vj, pm) + self.sim.execution_cost[vj].get(pm, 0) + self.sim.avg_communication_cost(vi, pk, vj, pm)
         for pm in self.sim.processors
       )
       pct = max(pct, tmp)
+    
+    if vi not in self.pct_cache:
+      self.pct_cache[vi] = {}
+    self.pct_cache[vi][pk] = pct
+
     return pct
