@@ -68,9 +68,11 @@ Other available parameters:
 - [X] Waiting time
 
 ### References
+- A Comparison of Eleven Static Heuristics for Mapping a Class of Independent Tasks onto Heterogeneous Distributed Computing Systems (https://www.researchgate.net/publication/2485282_A_Comparison_of_Eleven_Static_Heuristics_for_Mapping_a_Class_of_Independent_Tasks_onto_Heterogeneous_Distributed_Computing_Systems)
+- Benchmarking DAG Scheduling Algorithms on Scientific Workflow Instances (DOI: 10.1007/978-3-031-49435-2_1)
 - Static vs. Dynamic List-SchedulingPerformance Comparison
-- Análise comparativa de algoritmos de escalonamento de workflows científicos em processadores heterogêneos
-- A Compile-Time Scheduling Heuristic for Interconnection-Constrained Heterogeneous Processor Architectures (DLS)
+- Análise comparativa de algoritmos de escalonamento de workflows científicos em processadores heterogêneos (https://repositorio.ufu.br/handle/123456789/47466)
+- A Compile-Time Scheduling Heuristic for Interconnection-Constrained Heterogeneous Processor Architectures - Gilbert C. Sih, Member, IEEE, and Edward A. Lee, Member, IEEE (DLS)
 - A list scheduling algorithm for heterogeneous systems based on a critical node cost table and pessimistic cost table (IPEFT)
 - Task scheduling for heterogeneous computing systems (IHEFT)
 - List Scheduling Algorithm for Heterogeneous Systems by an Optimistic Cost Table (PEFT)
