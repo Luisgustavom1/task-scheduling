@@ -57,7 +57,7 @@ Other available parameters:
 - [XX] IHEFT
 - [XX] PEFT
 - [XX] IPEFT
-- [X] DLS
+- [XX] DLS
 
 ### Metrics
 - [X] Makespan
