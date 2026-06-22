@@ -158,10 +158,13 @@ class Simulator:
 
     self.logger.info(f"Critical path: {' -> '.join(self.CP)}")
 
-  def start(self, scheduler: Scheduler):
+  def start(self, scheduler: Scheduler, visualizer=None):
     self.logger.info(f"Starting scheduler...")
     
     self.ready_tasks.append(self.start_task.task_id)
+
+    if visualizer is not None and hasattr(visualizer, "attach"):
+      visualizer.attach(self)
 
     while len(self.completed_tasks) < len(self.workflow.tasks):
       if not self.ready_tasks:
@@ -198,6 +201,16 @@ class Simulator:
         data_ready_time=data_ready_time,
       )
       self.add_history(history)
+      self.logger.debug(f"history computed {history}")
+
+      if visualizer is not None and hasattr(visualizer, "on_task_scheduled"):
+        visualizer.on_task_scheduled(
+          task=task,
+          processor_id=machine_id,
+          start_time=start_time,
+          end_time=end_time,
+          ready_time=start_time,
+        )
 
       for child_id in self.workflow.tasks_children.get(task_id, []):
         parents: Dict[str, set[str]] = self.workflow.tasks_parents
@@ -206,6 +219,10 @@ class Simulator:
         if all(task in self.completed_tasks for task in parents.get(child_id, [])):
           if child_id not in self.ready_tasks:
             self.ready_tasks.append(child_id)
+
+    if visualizer is not None and hasattr(visualizer, "finalize"):
+      visualizer.finalize()
+    
 
     return
 
