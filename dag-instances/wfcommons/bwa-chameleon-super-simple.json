@@ -1,0 +1,1618 @@
+{
+    "name": "makeflow-bwa-small",
+    "description": "Trace generated with WorkflowHub - https://workflowhub.org",
+    "createdAt": "2020-12-30T02:19:01.238077",
+    "schemaVersion": "1.5",
+    "author": {
+        "name": "rafsilva",
+        "email": "support@workflowhub.org"
+    },
+    "workflow": {
+        "specification": {
+            "tasks": [
+                {
+                    "name": "fastq_reduce_ID000001",
+                    "id": "fastq_reduce_ID000001",
+                    "children": [
+                        "bwa_ID000003",
+                        "bwa_ID000004",
+                        "bwa_ID000005"
+                    ],
+                    "inputFiles": [
+                        "fastq_reduce",
+                        "query.fastq"
+                    ],
+                    "outputFiles": [
+                        "query.fastq.0",
+                        "query.fastq.1",
+                        "query.fastq.2",
+                        "query.fastq.3",
+                        "query.fastq.4",
+                        "query.fastq.5",
+                        "query.fastq.6",
+                        "query.fastq.7",
+                        "query.fastq.8",
+                        "query.fastq.9",
+                        "query.fastq.10",
+                        "query.fastq.11",
+                        "query.fastq.12",
+                        "query.fastq.13",
+                        "query.fastq.14",
+                        "query.fastq.15",
+                        "query.fastq.16",
+                        "query.fastq.17",
+                        "query.fastq.18",
+                        "query.fastq.19",
+                        "query.fastq.20",
+                        "query.fastq.21",
+                        "query.fastq.22",
+                        "query.fastq.23",
+                        "query.fastq.24",
+                        "query.fastq.25",
+                        "query.fastq.26",
+                        "query.fastq.27",
+                        "query.fastq.28",
+                        "query.fastq.29",
+                        "query.fastq.30",
+                        "query.fastq.31",
+                        "query.fastq.32",
+                        "query.fastq.33",
+                        "query.fastq.34",
+                        "query.fastq.35",
+                        "query.fastq.36",
+                        "query.fastq.37",
+                        "query.fastq.38",
+                        "query.fastq.39",
+                        "query.fastq.40",
+                        "query.fastq.41",
+                        "query.fastq.42",
+                        "query.fastq.43",
+                        "query.fastq.44",
+                        "query.fastq.45",
+                        "query.fastq.46",
+                        "query.fastq.47",
+                        "query.fastq.48",
+                        "query.fastq.49",
+                        "query.fastq.50",
+                        "query.fastq.51",
+                        "query.fastq.52",
+                        "query.fastq.53",
+                        "query.fastq.54",
+                        "query.fastq.55",
+                        "query.fastq.56",
+                        "query.fastq.57",
+                        "query.fastq.58",
+                        "query.fastq.59",
+                        "query.fastq.60",
+                        "query.fastq.61",
+                        "query.fastq.62",
+                        "query.fastq.63",
+                        "query.fastq.64",
+                        "query.fastq.65",
+                        "query.fastq.66",
+                        "query.fastq.67",
+                        "query.fastq.68",
+                        "query.fastq.69",
+                        "query.fastq.70",
+                        "query.fastq.71",
+                        "query.fastq.72",
+                        "query.fastq.73",
+                        "query.fastq.74",
+                        "query.fastq.75",
+                        "query.fastq.76",
+                        "query.fastq.77",
+                        "query.fastq.78",
+                        "query.fastq.79",
+                        "query.fastq.80",
+                        "query.fastq.81",
+                        "query.fastq.82",
+                        "query.fastq.83",
+                        "query.fastq.84",
+                        "query.fastq.85",
+                        "query.fastq.86",
+                        "query.fastq.87",
+                        "query.fastq.88",
+                        "query.fastq.89",
+                        "query.fastq.90",
+                        "query.fastq.91",
+                        "query.fastq.92",
+                        "query.fastq.93",
+                        "query.fastq.94",
+                        "query.fastq.95",
+                        "query.fastq.96",
+                        "query.fastq.97",
+                        "query.fastq.98",
+                        "query.fastq.99"
+                    ],
+                    "parents": []
+                },
+                {
+                    "name": "bwa_index_ID000002",
+                    "id": "bwa_index_ID000002",
+                    "children": [
+                        "bwa_ID000003",
+                        "bwa_ID000004",
+                        "bwa_ID000005"
+                    ],
+                    "inputFiles": [
+                        "bwa",
+                        "ref.fastq"
+                    ],
+                    "outputFiles": [
+                        "ref.fastq.bwt",
+                        "ref.fastq.pac",
+                        "ref.fastq.amb",
+                        "ref.fastq.ann",
+                        "ref.fastq.sa"
+                    ],
+                    "parents": []
+                },
+                {
+                    "name": "bwa_ID000003",
+                    "id": "bwa_ID000003",
+                    "children": [
+                        "cat_bwa_ID000103",
+                        "cat_ID000104"
+                    ],
+                    "inputFiles": [
+                        "bwa",
+                        "ref.fastq",
+                        "ref.fastq.bwt",
+                        "ref.fastq.pac",
+                        "ref.fastq.amb",
+                        "ref.fastq.ann",
+                        "ref.fastq.sa",
+                        "query.fastq.0"
+                    ],
+                    "outputFiles": [
+                        "query.fastq.0.sam",
+                        "query.fastq.0.err"
+                    ],
+                    "parents": [
+                        "fastq_reduce_ID000001",
+                        "bwa_index_ID000002"
+                    ]
+                },
+                {
+                    "name": "bwa_ID000004",
+                    "id": "bwa_ID000004",
+                    "children": [
+                        "cat_bwa_ID000103",
+                        "cat_ID000104"
+                    ],
+                    "inputFiles": [
+                        "bwa",
+                        "ref.fastq",
+                        "ref.fastq.bwt",
+                        "ref.fastq.pac",
+                        "ref.fastq.amb",
+                        "ref.fastq.ann",
+                        "ref.fastq.sa",
+                        "query.fastq.1"
+                    ],
+                    "outputFiles": [
+                        "query.fastq.1.sam",
+                        "query.fastq.1.err"
+                    ],
+                    "parents": [
+                        "fastq_reduce_ID000001",
+                        "bwa_index_ID000002"
+                    ]
+                },
+                {
+                    "name": "bwa_ID000005",
+                    "id": "bwa_ID000005",
+                    "children": [],
+                    "inputFiles": [
+                        "bwa",
+                        "ref.fastq",
+                        "ref.fastq.bwt",
+                        "ref.fastq.pac",
+                        "ref.fastq.amb",
+                        "ref.fastq.ann",
+                        "ref.fastq.sa",
+                        "query.fastq.2"
+                    ],
+                    "outputFiles": [
+                        "query.fastq.2.sam",
+                        "query.fastq.2.err"
+                    ],
+                    "parents": [
+                        "fastq_reduce_ID000001",
+                        "bwa_index_ID000002"
+                    ]
+                }
+            ],
+            "files": [
+                {
+                    "id": "query.fastq.0",
+                    "sizeInBytes": 24
+                },
+                {
+                    "id": "query.fastq.1",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.2",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.3",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.4",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.5",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.6",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.7",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.8",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.9",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.10",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.11",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.12",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.13",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.14",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.15",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.16",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.17",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.18",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.19",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.20",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.21",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.22",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.23",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.24",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.25",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.26",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.27",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.28",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.29",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.30",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.31",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.32",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.33",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.34",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.35",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.36",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.37",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.38",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.39",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.40",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.41",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.42",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.43",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.44",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.45",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.46",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.47",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.48",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.49",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.50",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.51",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.52",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.53",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.54",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.55",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.56",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.57",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.58",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.59",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.60",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.61",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.62",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.63",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.64",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.65",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.66",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.67",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.68",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.69",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.70",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.71",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.72",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.73",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.74",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.75",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.76",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.77",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.78",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.79",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.80",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.81",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.82",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.83",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.84",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.85",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.86",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.87",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.88",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.89",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.90",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.91",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.92",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.93",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.94",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.95",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.96",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.97",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.98",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "query.fastq.99",
+                    "sizeInBytes": 25
+                },
+                {
+                    "id": "fastq_reduce",
+                    "sizeInBytes": 2
+                },
+                {
+                    "id": "query.fastq",
+                    "sizeInBytes": 2438
+                },
+                {
+                    "id": "ref.fastq.bwt",
+                    "sizeInBytes": 100001
+                },
+                {
+                    "id": "ref.fastq.pac",
+                    "sizeInBytes": 25001
+                },
+                {
+                    "id": "ref.fastq.amb",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "ref.fastq.ann",
+                    "sizeInBytes": 577
+                },
+                {
+                    "id": "ref.fastq.sa",
+                    "sizeInBytes": 50001
+                },
+                {
+                    "id": "bwa",
+                    "sizeInBytes": 1445
+                },
+                {
+                    "id": "ref.fastq",
+                    "sizeInBytes": 200438
+                },
+                {
+                    "id": "query.fastq.0.sam",
+                    "sizeInBytes": 516
+                },
+                {
+                    "id": "query.fastq.0.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.1.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.1.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.2.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.2.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.3.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.3.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.4.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.4.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.5.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.5.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.6.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.6.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.7.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.7.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.8.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.8.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.9.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.9.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.10.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.10.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.11.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.11.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.12.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.12.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.13.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.13.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.14.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.14.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.15.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.15.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.16.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.16.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.17.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.17.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.18.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.18.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.19.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.19.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.20.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.20.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.21.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.21.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.22.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.22.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.23.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.23.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.24.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.24.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.25.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.25.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.26.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.26.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.27.sam",
+                    "sizeInBytes": 516
+                },
+                {
+                    "id": "query.fastq.27.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.28.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.28.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.29.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.29.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.30.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.30.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.31.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.31.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.32.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.32.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.33.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.33.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.34.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.34.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.35.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.35.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.36.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.36.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.37.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.37.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.38.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.38.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.39.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.39.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.40.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.40.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.41.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.41.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.42.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.42.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.43.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.43.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.44.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.44.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.45.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.45.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.46.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.46.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.47.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.47.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.48.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.48.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.49.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.49.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.50.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.50.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.51.sam",
+                    "sizeInBytes": 516
+                },
+                {
+                    "id": "query.fastq.51.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.52.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.52.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.53.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.53.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.54.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.54.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.55.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.55.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.56.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.56.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.57.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.57.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.58.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.58.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.59.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.59.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.60.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.60.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.61.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.61.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.62.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.62.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.63.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.63.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.64.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.64.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.65.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.65.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.66.sam",
+                    "sizeInBytes": 516
+                },
+                {
+                    "id": "query.fastq.66.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.67.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.67.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.68.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.68.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.69.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.69.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.70.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.70.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.71.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.71.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.72.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.72.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.73.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.73.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.74.sam",
+                    "sizeInBytes": 516
+                },
+                {
+                    "id": "query.fastq.74.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.75.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.75.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.76.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.76.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.77.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.77.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.78.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.78.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.79.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.79.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.80.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.80.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.81.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.81.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.82.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.82.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.83.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.83.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.84.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.84.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.85.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.85.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.86.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.86.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.87.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.87.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.88.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.88.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.89.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.89.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.90.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.90.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.91.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.91.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.92.sam",
+                    "sizeInBytes": 516
+                },
+                {
+                    "id": "query.fastq.92.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.93.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.93.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.94.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.94.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.95.sam",
+                    "sizeInBytes": 517
+                },
+                {
+                    "id": "query.fastq.95.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.96.sam",
+                    "sizeInBytes": 519
+                },
+                {
+                    "id": "query.fastq.96.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.97.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.97.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.98.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.98.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.fastq.99.sam",
+                    "sizeInBytes": 518
+                },
+                {
+                    "id": "query.fastq.99.err",
+                    "sizeInBytes": 1
+                },
+                {
+                    "id": "query.sam",
+                    "sizeInBytes": 3443
+                },
+                {
+                    "id": "cat_bwa",
+                    "sizeInBytes": 2
+                },
+                {
+                    "id": "query.err",
+                    "sizeInBytes": 14
+                }
+            ]
+        },
+        "execution": {
+            "makespanInSeconds": 689.9,
+            "executedAt": "2020-12-28T03:25:55+00:00",
+            "tasks": [
+                {
+                    "id": "fastq_reduce_ID000001",
+                    "runtimeInSeconds": 1,
+                    "command": {
+                        "program": "fastq_reduce",
+                        "arguments": [
+                            "fastq_reduce",
+                            "query.fastq",
+                            "100"
+                        ]
+                    },
+                    "coreCount": 1,
+                    "avgCPU": 94.3566,
+                    "readBytes": 2341000,
+                    "writtenBytes": 2343000,
+                    "memoryInBytes": 3000000,
+                    "machines": [
+                        "worker-1.novalocal"
+                    ]
+                },
+                {
+                    "id": "bwa_index_ID000002",
+                    "runtimeInSeconds": 2,
+                    "command": {
+                        "program": "bwa_index",
+                        "arguments": [
+                            "./bwa",
+                            "index",
+                            "ref.fastq"
+                        ]
+                    },
+                    "coreCount": 1,
+                    "avgCPU": 94.0542,
+                    "readBytes": 1147113000,
+                    "writtenBytes": 526773000,
+                    "memoryInBytes": 147000000,
+                    "machines": [
+                        "worker-1.novalocal"
+                    ]
+                },
+                {
+                    "id": "bwa_ID000003",
+                    "runtimeInSeconds": 1.5,
+                    "command": {
+                        "program": "bwa",
+                        "arguments": [
+                            "./bwa",
+                            "mem",
+                            "-v",
+                            "0",
+                            "ref.fastq",
+                            "query.fastq.0",
+                            ">",
+                            "query.fastq.0.sam",
+                            "2>",
+                            "query.fastq.0.err"
+                        ]
+                    },
+                    "coreCount": 1,
+                    "avgCPU": 78.6865,
+                    "readBytes": 167477000,
+                    "writtenBytes": 496000,
+                    "memoryInBytes": 3000000,
+                    "machines": [
+                        "worker-1.novalocal"
+                    ]
+                },
+                {
+                    "id": "bwa_ID000004",
+                    "runtimeInSeconds": 3,
+                    "command": {
+                        "program": "bwa",
+                        "arguments": [
+                            "./bwa",
+                            "mem",
+                            "-v",
+                            "0",
+                            "ref.fastq",
+                            "query.fastq.1",
+                            ">",
+                            "query.fastq.1.sam",
+                            "2>",
+                            "query.fastq.1.err"
+                        ]
+                    },
+                    "coreCount": 1,
+                    "avgCPU": 14.0604,
+                    "readBytes": 334949000,
+                    "writtenBytes": 1000000,
+                    "memoryInBytes": 5000000,
+                    "machines": [
+                        "worker-1.novalocal"
+                    ]
+                },
+                {
+                    "id": "bwa_ID000005",
+                    "runtimeInSeconds": 1.5,
+                    "command": {
+                        "program": "bwa",
+                        "arguments": [
+                            "./bwa",
+                            "mem",
+                            "-v",
+                            "0",
+                            "ref.fastq",
+                            "query.fastq.2",
+                            ">",
+                            "query.fastq.2.sam",
+                            "2>",
+                            "query.fastq.2.err"
+                        ]
+                    },
+                    "coreCount": 2,
+                    "avgCPU": 76.3476,
+                    "readBytes": 167477000,
+                    "writtenBytes": 500000,
+                    "memoryInBytes": 3000000,
+                    "machines": [
+                        "worker-1.novalocal"
+                    ]
+                }
+            ],
+            "machines": [
+                {
+                    "nodeName": "worker-1.novalocal",
+                    "cpu": {
+                        "coreCount": 2
+                    }
+                }
+            ]
+        }
+    },
+    "runtimeSystem": {
+        "name": "Makeflow",
+        "version": "7.1.12.",
+        "url": "http://ccl.cse.nd.edu/software/makeflow/"
+    }
+}

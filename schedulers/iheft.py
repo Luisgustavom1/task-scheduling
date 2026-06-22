@@ -15,17 +15,16 @@ class IHEFT(Scheduler):
       for task_id in self.sim.workflow.tasks:
         self.rank_proposed(task_id)
 
-    unescheduled_tasks = list(self.sim.ready_tasks)
+    # tasks with all parents completed and not yet scheduled
+    unescheduled_tasks = [
+      tid for tid in self.sim.ready_tasks
+      if tid not in self.sim.completed_tasks
+    ]
 
     if not unescheduled_tasks:
       raise RuntimeError("No unscheduled tasks remaining.")
 
-    unescheduled_tasks.sort(key=lambda tid: (
-      -self._rank_proposed[tid],                       # 1. Highest rank first (Descending)
-      self.sim.workflow.tasks[tid].priority,         # 2. Lowest priority first (Ascending)
-    ))
-
-    task_id = unescheduled_tasks.pop(0)
+    task_id = max(unescheduled_tasks, key=lambda tid: self._rank_proposed[tid])
 
     self.sim.ready_tasks.remove(task_id)
 
@@ -35,14 +34,13 @@ class IHEFT(Scheduler):
     min_exec_time = float("inf")
 
     for p_id in self.sim.processors:
-      execution_time = self.sim.execution_cost[task_id].get(p_id, 0.0)
-      est, _, _ = self.sim.calc_est(task_id, p_id)
-      eft = est + execution_time
+      eft = self.sim.calc_eft(task_id, p_id)
 
       if eft < min_eft:
         min_eft = eft
         best_eft_processor = p_id
 
+      execution_time = self.sim.execution_cost[task_id].get(p_id, 0.0)
       if execution_time < min_exec_time:
         min_exec_time = execution_time
         best_exec_processor = p_id
@@ -60,25 +58,6 @@ class IHEFT(Scheduler):
       return task_id, best_eft_processor
 
     return task_id, best_exec_processor
-
-  def weight_abstract(self, task_id: str, min_eft: float, pk: str) -> float:
-    eft_j = min_eft
-    eft_k = self.calc_eft(task_id, pk)
-
-    if eft_j == 0 or eft_k == 0:
-      return 0.0
-
-    return abs((eft_j - eft_k) / (eft_j / eft_k))
-
-  def cross_threshold(self, ni: str, weight_abstract: float) -> float:
-    if weight_abstract <= 0:
-      return float("inf")
-
-    return self.weight(ni) / weight_abstract
-
-  def calc_eft(self, task_id: str, processor_id: str) -> float:
-    est, _, _ = self.sim.calc_est(task_id, processor_id)
-    return est + self.sim.execution_cost[task_id].get(processor_id, 0.0)
 
   def rank_proposed(self, ni: str) -> float:
     if ni in self._rank_proposed:
@@ -104,3 +83,18 @@ class IHEFT(Scheduler):
 
     self._weight_cache[ni] = abs((highest - lowest) / (highest / lowest))
     return self._weight_cache[ni]
+  
+  def weight_abstract(self, task_id: str, min_eft: float, pk: str) -> float:
+    eft_j = min_eft
+    eft_k = self.sim.calc_eft(task_id, pk)
+
+    if eft_j == 0 or eft_k == 0:
+      return 0.0
+
+    return abs((eft_j - eft_k) / (eft_j / eft_k))
+
+  def cross_threshold(self, ni: str, weight_abstract: float) -> float:
+    if weight_abstract <= 0:
+      return float("inf")
+
+    return self.weight(ni) / weight_abstract

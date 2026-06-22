@@ -15,28 +15,27 @@ class HEFT(Scheduler):
 
     # tasks with all parents completed and not yet scheduled
     unescheduled_tasks = [
-      self.sim.workflow.tasks[tid] for tid in self.sim.workflow.tasks 
-      if tid not in self.sim.completed_tasks and 
-      all(p in self.sim.completed_tasks for p in self.sim.workflow.tasks_parents[tid])
+      self.sim.workflow.tasks[tid] for tid in self.sim.ready_tasks
+      if tid not in self.sim.completed_tasks
     ]
 
     # select task with highest upward rank
     selected_task = max(unescheduled_tasks, key=lambda t: self.up_ranks[t.task_id])
     task_id = selected_task.task_id
 
-    best_processor = list(self.sim.processors.keys())[0]
+    best_processor = None
     min_eft = float('inf')
 
     for p_id in self.sim.processors:
-      execution_time = self.sim.execution_cost[task_id].get(p_id, 0)
-
-      est, _, _ = self.sim.calc_est(task_id, p_id)
-      eft = est + execution_time
+      eft = self.sim.calc_eft(task_id, p_id)
 
       # schedule task to the processor that minimizes EFT
       if eft < min_eft:
         min_eft = eft
         best_processor = p_id
+
+    if best_processor is None:
+      raise RuntimeError(f"Unable to select processors for task {task_id}.")
 
     return task_id, best_processor
 
