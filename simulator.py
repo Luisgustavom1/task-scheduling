@@ -223,13 +223,6 @@ class Simulator:
     if visualizer is not None and hasattr(visualizer, "finalize"):
       visualizer.finalize()
     
-    serializable_history = {
-        machine_id: [asdict(h) for h in history_list]
-        for machine_id, history_list in self.history.items()
-    }
-    
-    formatted_history = json.dumps(serializable_history, indent=4)
-    self.logger.info("Scheduling complete.\n%s", formatted_history)
 
     return
 
