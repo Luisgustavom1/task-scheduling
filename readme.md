@@ -37,14 +37,13 @@ To change the input DAG, use `--dag-path`:
 
 Other available parameters:
 
-- `--visualize`: shows a visualization of tasks and processors while the simulator runs.
 - `--log-level`: sets the log level. Accepted values are `CRITICAL`, `ERROR`, `WARNING`, `INFO`, and `DEBUG`.
 - `--silence`: disables the scheduler's logs.
 
 ## Example
 
 ```bash
-./ve/bin/python main.py --scheduler HEFT --visualize --log-level INFO
+./ve/bin/python main.py --scheduler HEFT --log-level INFO
 ```
 
 ## Next Steps
