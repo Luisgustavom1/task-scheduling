@@ -9,6 +9,7 @@ class IHEFT(Scheduler):
     self.sim = simulator
     self._rank_proposed: Dict[str, float] = {}
     self._weight_cache: Dict[str, float] = {}
+    random.seed(42)
 
   def schedule(self) -> tuple[str, str]:
     if not self._rank_proposed:
