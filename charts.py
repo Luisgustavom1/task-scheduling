@@ -19,10 +19,10 @@ def plot_metric_comparison(
   cmap = plt.get_cmap("tab10")
   colors = {alg: cmap(i % 10) for i, alg in enumerate(algorithms)}
 
-  for metric_label, get_metric_val in metrics_to_plot.items():
+  for metric_label, get_metric_val in metrics_to_plot.items():    
     data = sorted(
       [(alg, get_metric_val(metrics_by_algorithm[alg])) for alg in algorithms],
-      key=lambda item: item[1]
+      key=lambda item: abs(item[1] - 1.0) if metric_label == "Load balance" else item[1]
     )
     sorted_algs, sorted_vals = zip(*data) if data else ((), ())
 
@@ -49,8 +49,14 @@ def plot_metric_comparison(
       if val == best_val:
         custom_labels.append(f"{val_str}\n(best)")
       else:
-        pct_diff = ((val - best_val) / best_val * 100) if best_val != 0 else 0.0
-        custom_labels.append(f"{val_str}\n+{pct_diff:.2f}%")
+        if metric_label == "Load balance":
+          # 2. Agora o delta é a distância absoluta em relação ao MELHOR valor, não ao 1.0
+          dist_to_best = abs(val - best_val)
+          custom_labels.append(f"{val_str}\n(Δ={dist_to_best:.3f})")
+        else:
+          # Para as outras métricas, continua mostrando o % pior em relação ao melhor
+          pct_diff = ((val - best_val) / best_val * 100) if best_val != 0 else 0.0
+          custom_labels.append(f"{val_str}\n+{pct_diff:.2f}%")
 
     plt.bar_label(
       bars, 
@@ -71,6 +77,10 @@ def plot_metric_comparison(
         plt.ylim(min_val - padding, max_val + (padding * 2.5))
       else:
         plt.ylim(min_val * 0.9, max_val * 1.2)
+        
+      # Mantive a linha vermelha no 1.0 como referência visual do ponto ideal
+      if metric_label == "Load balance":
+        plt.axhline(y=1.0, color='red', linestyle='--', alpha=0.6, zorder=0)
 
     plt.title(metric_label)
     plt.ylabel(metric_label)
