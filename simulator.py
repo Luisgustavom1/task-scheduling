@@ -14,6 +14,7 @@ class Simulator:
     self.logger = logger or logging.getLogger(__name__)
     self.bandwidth = bandwidth
     self.latency = latency
+    self.scheduler = None
 
     self.ready_tasks: deque[str] = deque()
     self.processors: Dict[str, Processor] = cast(Dict[str, Processor], instance.machines)
@@ -30,7 +31,7 @@ class Simulator:
     
     self.execution_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> runtime
     self.avg_execution_cost: Dict[str, float] = {} # task_id -> average runtime across all machines
-    self._communication_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> cost
+    self.communication_cost: Dict[str, Dict[str, float]] = {} # task_id -> machine_id -> cost
     self.CP = [] # critical path tasks
 
     self.normalizeStartTasks()
@@ -111,7 +112,7 @@ class Simulator:
 
   def buildCommunicationCost(self):
     for task_id_i, task_i in self.workflow.tasks.items():
-      self._communication_cost[task_id_i] = {}
+      self.communication_cost[task_id_i] = {}
       for task_id_j in self.workflow.tasks_children.get(task_id_i, []):
         task_j: Task = self.workflow.tasks[task_id_j]
 
@@ -123,7 +124,7 @@ class Simulator:
         
         comm_cost = self.latency + total_size / self.bandwidth
           
-        self._communication_cost[task_id_i][task_id_j] = comm_cost
+        self.communication_cost[task_id_i][task_id_j] = comm_cost
   
   def buildAvgExecutionCost(self):
     for task_id in self.workflow.tasks:
@@ -149,7 +150,7 @@ class Simulator:
       max_cost_child = None
       for child_id in children:
         for runtime in self.execution_cost[child_id].values():
-          cost = runtime + self._communication_cost.get(task_id, {}).get(child_id, 0)
+          cost = runtime + self.communication_cost.get(task_id, {}).get(child_id, 0)
           if cost > max_cost:
             max_cost = cost
             max_cost_child = child_id
@@ -163,6 +164,7 @@ class Simulator:
 
   def start(self, scheduler: Scheduler):
     self.logger.info(f"Starting scheduler...")
+    self.scheduler = scheduler
     
     self.ready_tasks.append(self.start_task.task_id)
 
@@ -239,13 +241,13 @@ class Simulator:
     if possible_processor_j is not None and self.task_allocation.get(task_id_i) == possible_processor_j:
       return 0
 
-    return self._communication_cost.get(task_id_i, {}).get(task_id_j, 0.0)
+    return self.communication_cost.get(task_id_i, {}).get(task_id_j, 0.0)
 
   def avg_communication_cost(self, ti: str, pi: str, tk: str, pk: str) -> float:
     if pi == pk:
       return 0.0
 
-    return self._communication_cost.get(ti, {}).get(tk, 0.0)
+    return self.communication_cost.get(ti, {}).get(tk, 0.0)
 
   def calc_eft(self, ti: str, pj: str) -> float:
     est, _, _ = self.calc_est(ti, pj)
@@ -256,6 +258,11 @@ class Simulator:
   # est -> the earliest time that task ti can start on processor pj considering the finish time of its parent tasks and the communication cost
   # start_time, communication_cost, data_ready_time
   def calc_est(self, task_id: str, processor_id: str) -> tuple[float, float, float]:
+    if not self.scheduler:
+      raise ValueError("scheduler field not defined")
+
+    insertion_based_policy = self.scheduler.insertion_based_policy
+
     execution_time = self.execution_cost[task_id].get(processor_id, 0.0)
     processor_cores = self.processors[processor_id].cpu_cores or 1
     task_cores = self.workflow.tasks[task_id].cores or 1
@@ -279,7 +286,13 @@ class Simulator:
     if not schedules:
       return data_ready_time, communication_cost, data_ready_time
 
-    candidate_times = [data_ready_time] + [s.end for s in schedules if s.end >= data_ready_time]
+    process_available_at = max((s.end for s in schedules), default=0)
+    earliest_start = data_ready_time
+    if not insertion_based_policy:
+      last_scheduled_start = max((s.start for s in schedules), default=0.0)
+      earliest_start = max(data_ready_time, last_scheduled_start)
+
+    candidate_times = [earliest_start] + ([s.end for s in schedules if s.end >= earliest_start] if insertion_based_policy else [])
     candidate_times = sorted(list(set(candidate_times))) 
 
     for t_start in candidate_times:
@@ -289,8 +302,7 @@ class Simulator:
       if self.has_enough_cores(processor_id, t_start, t_end, task_cores):
         return t_start, communication_cost, data_ready_time
 
-    process_available_at = max((s.end for s in schedules), default=0)
-    return max(process_available_at, data_ready_time), communication_cost, data_ready_time
+    return max(process_available_at, earliest_start), communication_cost, data_ready_time
 
   def has_enough_cores(self, processor_id: str, start_time: float, end_time: float, task_cores: int) -> bool:
     processor_cores = self.processors[processor_id].cpu_cores or 1

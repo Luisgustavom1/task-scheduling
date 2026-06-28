@@ -12,6 +12,8 @@ class Processor(common.Machine):
   pass
 
 class Scheduler(ABC):
+  insertion_based_policy: bool = True
+
   @abstractmethod
   def schedule(self) -> tuple[str, str]:
     pass

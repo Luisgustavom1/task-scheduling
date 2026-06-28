@@ -4,6 +4,8 @@ from simulator import Simulator
 import statistics
 
 class DLS(Scheduler):
+  insertion_based_policy: bool = False
+
   def __init__(self, simulator: Simulator):
     self.name = "DLS"
     self.sim = simulator
