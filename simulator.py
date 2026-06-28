@@ -8,11 +8,12 @@ from schedulers.scheduler import Instance, Scheduler, Task, Workflow, Processor
 from common import convert_machine_speed, file_size_in_mb, History
 
 class Simulator:
-  def __init__(self, instance: Instance, bandwidth: float, logger: logging.Logger | None = None):
+  def __init__(self, instance: Instance, bandwidth: float, latency: float = 10.0, logger: logging.Logger | None = None):
     self.instance: Instance = instance
     self.workflow: Workflow = instance.workflow
     self.logger = logger or logging.getLogger(__name__)
     self.bandwidth = bandwidth
+    self.latency = latency
 
     self.ready_tasks: deque[str] = deque()
     self.processors: Dict[str, Processor] = cast(Dict[str, Processor], instance.machines)
@@ -119,8 +120,10 @@ class Simulator:
           file_size_in_mb(f.size, self.instance.runtime_system["name"])
           for f in shared_files
         )
-        # maybe this calculation of communication cost is wrong
-        self._communication_cost[task_id_i][task_id_j] = total_size / self.bandwidth
+        
+        comm_cost = self.latency + total_size / self.bandwidth
+          
+        self._communication_cost[task_id_i][task_id_j] = comm_cost
   
   def buildAvgExecutionCost(self):
     for task_id in self.workflow.tasks:
