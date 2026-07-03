@@ -49,7 +49,7 @@ Other available parameters:
 ## Next Steps
 
 ### Simulador improvements
-- [ ] Consider parallelism on processors
+- [ ] Consider parallelism on processors ???????
 
 ### Algorithms
 - [XX] HEFT
@@ -63,7 +63,6 @@ Other available parameters:
 - [X] SLR (scheduling length ratio)
 - [X] Load balance
 - [X] Communication cost
-- [X] Idle time
 - [X] Waiting time
 
 ### References
