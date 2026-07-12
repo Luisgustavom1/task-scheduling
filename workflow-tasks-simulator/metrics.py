@@ -72,11 +72,20 @@ class SimulationMetrics:
     if self._total_wait_time is not None:
       return self._total_wait_time
     total = 0.0
+    count = 0.0
+    s = {}
     for entry in self._history:
       start = float(entry.start)
       data_ready = float(entry.data_ready_time)
       total += max(0.0, start - data_ready)
-    self._total_wait_time = total
+    
+      if entry.task_id not in s:
+        s[entry.task_id] = entry.task_id
+      else:
+        raise ValueError(f"Duplicate task_id found in history: {entry.task_id}")
+
+      count += 1.0
+    self._total_wait_time = total / count
     return self._total_wait_time
 
   def log(self, logger: Any) -> None:
