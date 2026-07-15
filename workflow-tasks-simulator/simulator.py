@@ -160,8 +160,6 @@ class Simulator:
 
       tasks.append(max_cost_child)
 
-    self.logger.info(f"Critical path: {' -> '.join(self.CP)}")
-
   def start(self, scheduler: Scheduler):
     self.logger.info(f"Starting scheduler...")
     self.scheduler = scheduler

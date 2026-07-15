@@ -28,7 +28,7 @@ class SimulationMetrics:
     
     self._CPmin = []
     for task_id in self._sim.CP:
-      min_cost = min(self._sim.execution_cost[task_id].values()) if self._sim.execution_cost[task_id] else 0
+      min_cost = min(self._sim.execution_cost[task_id].values())
       self._CPmin.append((task_id, min_cost))
 
     return self._CPmin
