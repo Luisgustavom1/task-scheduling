@@ -3,7 +3,9 @@ import logging
 import pathlib
 import sys
 
-from charts import plot_metric_comparison
+from wfcommons.common import Machine, machine
+
+from charts import plot_metric_comparison, plot_metric_trends
 from metrics import SimulationMetrics
 from schedulers.dls import DLS
 from schedulers.peft import PEFT
@@ -35,7 +37,7 @@ parser.add_argument(
 parser.add_argument(
   "--dag-path",
   default="dag-instances/wfcommons/bwa-chameleon-small-001.json",
-  help="Path to the DAG JSON file to load. Relative paths are resolved from the repository root.",
+  help="Path to a DAG JSON file or a directory containing DAG JSON files. Relative paths are resolved from the repository root.",
 )
 
 args = parser.parse_args()
@@ -63,11 +65,54 @@ scheduler_map = {
   "DLS": DLS,
 }
 
+def load_dag_paths(path: pathlib.Path) -> list[pathlib.Path]:
+  if path.is_file():
+    return [path]
+
+  if path.is_dir():
+    dag_paths = sorted(
+      candidate
+      for candidate in path.iterdir()
+      if candidate.is_file() and candidate.suffix.lower() == ".json"
+    )
+
+    if not dag_paths:
+      parser.error(f"No DAG JSON files found in directory: {path}")
+
+    return dag_paths
+
+  parser.error(f"DAG path must be a file or directory: {path}")
+
 def load_workflow(path: pathlib.Path) -> wfinstances.Instance:
-  return wfinstances.Instance(
+  inst = wfinstances.Instance(
     input_instance=path,
     logger=logger,
   )
+
+  inst.machines = {
+    'machine1': Machine(
+      name="machine1",
+      cpu={"vendor": "GenuineIntel", "coreCount": 48, "speedInMHz": 1200},
+    ),
+    'machine2': Machine(
+      name="machine2",
+      cpu={"vendor": "GenuineIntel", "coreCount": 48, "speedInMHz": 1800},
+    ),
+    'machine3': Machine(
+      name="machine3",
+      cpu={"vendor": "GenuineIntel", "coreCount": 48, "speedInMHz": 2400},
+    ),
+    'machine4': Machine(
+      name="machine4",
+      cpu={"vendor": "GenuineIntel", "coreCount": 48, "speedInMHz": 3000},
+    )
+  } 
+
+  return inst
+
+def count_tasks(path: pathlib.Path) -> int:
+  workflow = load_workflow(path)
+  return len(workflow.workflow.tasks)
 
 def run_scheduler(algorithm: str, path: pathlib.Path) -> SimulationMetrics:
   workflow = load_workflow(path)
@@ -76,18 +121,37 @@ def run_scheduler(algorithm: str, path: pathlib.Path) -> SimulationMetrics:
   simulator.start(scheduler)
   return SimulationMetrics(simulator)
 
+dag_paths = load_dag_paths(dag_path)
+
 if args.compare:
   algorithms = list(scheduler_map.keys())
 
-  metrics_by_algorithm: dict[str, SimulationMetrics] = {}
-  for algorithm in algorithms:
-    metrics_by_algorithm[algorithm] = run_scheduler(algorithm, dag_path)
+  if dag_path.is_file():
+    metrics_by_algorithm: dict[str, SimulationMetrics] = {}
+    for algorithm in algorithms:
+      metrics_by_algorithm[algorithm] = run_scheduler(algorithm, dag_path)
 
-  plot_metric_comparison(algorithms, metrics_by_algorithm, dag_path.name)
+    plot_metric_comparison(algorithms, metrics_by_algorithm, dag_path.name)
+  else:
+    runs_by_algorithm: dict[str, list[tuple[int, str, SimulationMetrics]]] = {algorithm: [] for algorithm in algorithms}
+
+    for dag_file in dag_paths:
+      task_count = count_tasks(dag_file)
+      for algorithm in algorithms:
+        metrics = run_scheduler(algorithm, dag_file)
+        runs_by_algorithm[algorithm].append((task_count, dag_file.stem, metrics))
+
+    plot_metric_trends(algorithms, runs_by_algorithm, dag_path.name)
   sys.exit(0)
 
 if args.scheduler:
-  metrics = run_scheduler(args.scheduler, dag_path)
-  metrics.log(logger)
+  if dag_path.is_file():
+    metrics = run_scheduler(args.scheduler, dag_path)
+    metrics.log(logger)
+  else:
+    for dag_file in dag_paths:
+      metrics = run_scheduler(args.scheduler, dag_file)
+      logger.info(f"DAG: {dag_file.name} ({count_tasks(dag_file)} tasks)")
+      metrics.log(logger)
 else:
   logger.error("No scheduler selected. Use --scheduler to select an algorithm or --compare to run all algorithms.")

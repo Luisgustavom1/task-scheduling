@@ -9,7 +9,7 @@ def plot_metric_comparison(
   dag_name: str,
 ) -> None:
   metrics_to_plot = {
-    "Makespan": lambda m: m.makespan(),
+    # "Makespan": lambda m: m.makespan(),
     "SLR": lambda m: m.slr(),
     "Load balance": lambda m: m.loadBalance(),
     "Communication cost": lambda m: m.communicationCost(),
@@ -87,4 +87,78 @@ def plot_metric_comparison(
     plt.xticks(rotation=30)
     plt.suptitle(f"Scheduler comparison for {dag_name}")
 
+    plt.show()
+
+
+def plot_metric_trends(
+  algorithms: list[str],
+  runs_by_algorithm: dict[str, list[tuple[int, str, SimulationMetrics]]],
+  dag_group_name: str,
+) -> None:
+  metrics_to_plot = {
+    # "Makespan": lambda m: m.makespan(),
+    "SLR": lambda m: m.slr(),
+    "Load balance": lambda m: m.loadBalance(),
+    "Communication cost": lambda m: m.communicationCost(),
+    "Total wait time": lambda m: m.totalWaitTime(),
+  }
+
+  cmap = plt.get_cmap("tab10")
+  colors = {alg: cmap(i % 10) for i, alg in enumerate(algorithms)}
+
+  dag_task_counts: dict[str, int] = {}
+  for algorithm in algorithms:
+    for task_count, dag_name, _ in runs_by_algorithm.get(algorithm, []):
+      dag_task_counts[dag_name] = task_count
+
+  dag_labels = sorted(
+    dag_task_counts,
+    key=lambda dag_name: (dag_task_counts.get(dag_name, 0), dag_name),
+  )
+  dag_xtick_labels = [f"{dag_task_counts[dag_name]}\n{dag_name}" for dag_name in dag_labels]
+
+  for metric_label, get_metric_val in metrics_to_plot.items():
+    plt.figure(figsize=(10, 5), constrained_layout=True)
+
+    dag_metric_values: dict[str, dict[str, float]] = {dag_name: {} for dag_name in dag_labels}
+    for algorithm in algorithms:
+      for _, dag_name, metrics in runs_by_algorithm.get(algorithm, []):
+        dag_metric_values.setdefault(dag_name, {})[algorithm] = get_metric_val(metrics)
+
+    if not dag_labels:
+      continue
+
+    x_positions = list(range(len(dag_labels)))
+    group_width = 0.8
+    bar_width = group_width / max(len(algorithms), 1)
+
+    for index, algorithm in enumerate(algorithms):
+      bar_positions = [x - (group_width / 2) + (bar_width / 2) + (index * bar_width) for x in x_positions]
+      metric_values = [dag_metric_values.get(dag_name, {}).get(algorithm, 0.0) for dag_name in dag_labels]
+
+      plt.bar(
+        bar_positions,
+        metric_values,
+        width=bar_width,
+        color=colors[algorithm],
+        edgecolor="#333333",
+        linewidth=0.8,
+        alpha=0.85,
+        label=algorithm,
+        zorder=2,
+      )
+
+    plt.xticks(x_positions, dag_xtick_labels, rotation=30)
+
+    plt.title(f"{metric_label} by DAG file")
+    plt.xlabel("Task count")
+    plt.ylabel(metric_label)
+    plt.grid(axis='y', linestyle=':', alpha=0.4, zorder=1)
+
+    if metric_label == "Load balance":
+      plt.axhline(y=1.0, color='red', linestyle='--', alpha=0.5, zorder=0)
+
+    plt.legend(loc="best", frameon=False)
+
+    plt.suptitle(f"Scheduler trends by DAG file for {dag_group_name}")
     plt.show()
