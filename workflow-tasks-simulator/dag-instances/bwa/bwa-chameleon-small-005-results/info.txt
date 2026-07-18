@@ -1,0 +1,26 @@
+DAG: bwa-chameleon-small-005.json
+Number of tasks: 104
+machines quantity: 4
+  HEFT: {'Makespan': 890.2359168749332, 'SLR': 1.0689829450843586, 'Balanceamento de carga': 0.91663906891286, 'Custo de comunicação': 3030.708388800008, 'Tempo total de espera': 42.389216045688116}
+  IHEFT: {'Makespan': 902.3618147801683, 'SLR': 1.0835435551527923, 'Balanceamento de carga': 0.9428671513521307, 'Custo de comunicação': 3010.567488800007, 'Tempo total de espera': 39.68663063636095}
+  PEFT: {'Makespan': 905.2516785973445, 'SLR': 1.08701366355397, 'Balanceamento de carga': 0.934741364959812, 'Custo de comunicação': 3090.569152800004, 'Tempo total de espera': 28.53043155967384}
+  IPEFT: {'Makespan': 890.2359168749332, 'SLR': 1.0689829450843586, 'Balanceamento de carga': 0.91663906891286, 'Custo de comunicação': 3030.708388800008, 'Tempo total de espera': 42.389216045688116}
+  DLS: {'Makespan': 933.1365242707205, 'SLR': 1.120497399590803, 'Balanceamento de carga': 0.9621098534308323, 'Custo de comunicação': 3020.5674888000035, 'Tempo total de espera': 60.14748979753431}
+machines quantity: 8
+  HEFT: {'Makespan': 771.6764432215177, 'SLR': 1.036703062834673, 'Balanceamento de carga': 1.756890701608298, 'Custo de comunicação': 3482.2582304000075, 'Tempo total de espera': 11.556012245309834}
+  IHEFT: {'Makespan': 814.9465050167224, 'SLR': 1.0948339102723177, 'Balanceamento de carga': 1.917767992346201, 'Custo de comunicação': 3170.8494320000095, 'Tempo total de espera': 14.653691588142644}
+  PEFT: {'Makespan': 769.982547185191, 'SLR': 1.034427410617466, 'Balanceamento de carga': 1.756285020060762, 'Custo de comunicação': 3371.8355888000106, 'Tempo total de espera': 5.878730429474286}
+  IPEFT: {'Makespan': 761.6764432215177, 'SLR': 1.0232686361142362, 'Balanceamento de carga': 1.7341505417726333, 'Custo de comunicação': 3502.2582904000105, 'Tempo total de espera': 11.556012245309834}
+  DLS: {'Makespan': 817.9597644269722, 'SLR': 1.0988820515459843, 'Balanceamento de carga': 1.8616690910603215, 'Custo de comunicação': 3432.2565544000045, 'Tempo total de espera': 19.900253065623765}
+machines quantity: 16
+  HEFT: {'Makespan': 758.527698442436, 'SLR': 1.019038478014643, 'Balanceamento de carga': 3.577002988637177, 'Custo de comunicação': 3702.9627888000136, 'Tempo total de espera': 0.0}
+  IHEFT: {'Makespan': 814.9465050167224, 'SLR': 1.0948339102723177, 'Balanceamento de carga': 4.003411532343308, 'Custo de comunicação': 3250.84959200001, 'Tempo total de espera': 9.373677273300942}
+  PEFT: {'Makespan': 766.7767628978397, 'SLR': 1.0301206232084712, 'Balanceamento de carga': 3.6132146091215023, 'Custo de comunicação': 3512.1186352000077, 'Tempo total de espera': 1.2171075666937103}
+  IPEFT: {'Makespan': 748.527698442436, 'SLR': 1.0056040512942064, 'Balanceamento de carga': 3.5299027941832564, 'Custo de comunicação': 3692.962788800013, 'Tempo total de espera': 0.0}
+  DLS: {'Makespan': 801.2053297402116, 'SLR': 1.0763734290418214, 'Balanceamento de carga': 3.718268317161277, 'Custo de comunicação': 3672.8218888000133, 'Tempo total de espera': 5.169163700170653}
+machines quantity: 32
+  HEFT: {'Makespan': 737.7800782402319, 'SLR': 1.0176847109877443, 'Balanceamento de carga': 7.625352067430747, 'Custo de comunicação': 3702.9627888000136, 'Tempo total de espera': 0.0}
+  IHEFT: {'Makespan': 793.970700325733, 'SLR': 1.0951933598166772, 'Balanceamento de carga': 8.340590339632122, 'Custo de comunicação': 3330.8497520000105, 'Tempo total de espera': 9.129412067482022}
+  PEFT: {'Makespan': 739.316391724991, 'SLR': 1.0198038827990148, 'Balanceamento de carga': 7.585339117164514, 'Custo de comunicação': 3632.541336000007, 'Tempo total de espera': 0.36939111282946935}
+  IPEFT: {'Makespan': 727.7800782402319, 'SLR': 1.003890834722948, 'Balanceamento de carga': 7.522158989494176, 'Custo de comunicação': 3692.962788800013, 'Tempo total de espera': 0.0}
+  DLS: {'Makespan': 772.5963436748063, 'SLR': 1.0657098367284266, 'Balanceamento de carga': 7.153548192959019, 'Custo de comunicação': 3833.9456184000064, 'Tempo total de espera': 2.468018718249395}
