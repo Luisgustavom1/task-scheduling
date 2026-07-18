@@ -161,7 +161,7 @@ class Simulator:
       tasks.append(max_cost_child)
 
   def start(self, scheduler: Scheduler):
-    self.logger.info(f"Starting scheduler...")
+    self.logger.info(f"Starting scheduler f{scheduler.__class__.__name__}...")
     self.scheduler = scheduler
     
     self.ready_tasks.append(self.start_task.task_id)

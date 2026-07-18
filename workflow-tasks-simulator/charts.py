@@ -1,164 +1,103 @@
-from __future__ import annotations
-
-import matplotlib.pyplot as plt
+import pathlib
 from metrics import SimulationMetrics
+import matplotlib.pyplot as plt
 
-def plot_metric_comparison(
+def plot_machine_scaling(
   algorithms: list[str],
-  metrics_by_algorithm: dict[str, SimulationMetrics],
-  dag_name: str,
+  metrics_by_machine_count: dict[int, dict[str, SimulationMetrics]],
+  output_dir: pathlib.Path,
 ) -> None:
   metrics_to_plot = {
-    # "Makespan": lambda m: m.makespan(),
+    "Makespan": lambda m: m.makespan(),
     "SLR": lambda m: m.slr(),
-    "Load balance": lambda m: m.loadBalance(),
-    "Communication cost": lambda m: m.communicationCost(),
-    "Total wait time": lambda m: m.totalWaitTime(),
+    "Balanceamento de carga": lambda m: m.loadBalance(),
+    "Custo de comunicação": lambda m: m.communicationCost(),
+    "Tempo total de espera": lambda m: m.totalWaitTime(),
   }
+  machine_counts = sorted(metrics_by_machine_count.keys())
 
   cmap = plt.get_cmap("tab10")
-  colors = {alg: cmap(i % 10) for i, alg in enumerate(algorithms)}
-
-  for metric_label, get_metric_val in metrics_to_plot.items():    
-    data = sorted(
-      [(alg, get_metric_val(metrics_by_algorithm[alg])) for alg in algorithms],
-      key=lambda item: abs(item[1] - 1.0) if metric_label == "Load balance" else item[1]
-    )
-    sorted_algs, sorted_vals = zip(*data) if data else ((), ())
-
-    plt.figure(figsize=(10, 5), constrained_layout=True)
-    
-    plt.grid(axis='y', linestyle=':', alpha=0.4, zorder=1)
-
-    bars = plt.bar(
-      sorted_algs, 
-      sorted_vals, 
-      color=[colors[alg] for alg in sorted_algs], 
-      edgecolor="#333333",
-      linewidth=0.8,
-      alpha=0.85,
-      zorder=2
-    )
-    
-    best_val = sorted_vals[0] if sorted_vals else 1.0
-    custom_labels = []
-    
-    for val in sorted_vals:
-      val_str = f"{val:.3f}" 
-      
-      if val == best_val:
-        custom_labels.append(f"{val_str}\n(best)")
-      else:
-        if metric_label == "Load balance":
-          # 2. Agora o delta é a distância absoluta em relação ao MELHOR valor, não ao 1.0
-          dist_to_best = abs(val - best_val)
-          custom_labels.append(f"{val_str}\n(Δ={dist_to_best:.3f})")
-        else:
-          # Para as outras métricas, continua mostrando o % pior em relação ao melhor
-          pct_diff = ((val - best_val) / best_val * 100) if best_val != 0 else 0.0
-          custom_labels.append(f"{val_str}\n+{pct_diff:.2f}%")
-
-    plt.bar_label(
-      bars, 
-      labels=custom_labels, 
-      padding=4, 
-      color="#111827", 
-      fontsize=9,
-      bbox=dict(facecolor='white', edgecolor='none', alpha=0.8, pad=0.5)
-    )
-
-    if sorted_vals:
-      min_val = min(sorted_vals)
-      max_val = max(sorted_vals)
-      diff = max_val - min_val
-      
-      if diff > 0:
-        padding = diff * 0.15
-        plt.ylim(min_val - padding, max_val + (padding * 2.5))
-      else:
-        plt.ylim(min_val * 0.9, max_val * 1.2)
-        
-      # Mantive a linha vermelha no 1.0 como referência visual do ponto ideal
-      if metric_label == "Load balance":
-        plt.axhline(y=1.0, color='red', linestyle='--', alpha=0.6, zorder=0)
-
-    plt.title(metric_label)
-    plt.ylabel(metric_label)
-    plt.xticks(rotation=30)
-    plt.suptitle(f"Scheduler comparison for {dag_name}")
-
-    plt.show()
-
-
-def plot_metric_trends(
-  algorithms: list[str],
-  runs_by_algorithm: dict[str, list[tuple[int, str, SimulationMetrics]]],
-  dag_group_name: str,
-) -> None:
-  metrics_to_plot = {
-    # "Makespan": lambda m: m.makespan(),
-    "SLR": lambda m: m.slr(),
-    "Load balance": lambda m: m.loadBalance(),
-    "Communication cost": lambda m: m.communicationCost(),
-    "Total wait time": lambda m: m.totalWaitTime(),
-  }
-
-  cmap = plt.get_cmap("tab10")
-  colors = {alg: cmap(i % 10) for i, alg in enumerate(algorithms)}
-
-  dag_task_counts: dict[str, int] = {}
-  for algorithm in algorithms:
-    for task_count, dag_name, _ in runs_by_algorithm.get(algorithm, []):
-      dag_task_counts[dag_name] = task_count
-
-  dag_labels = sorted(
-    dag_task_counts,
-    key=lambda dag_name: (dag_task_counts.get(dag_name, 0), dag_name),
-  )
-  dag_xtick_labels = [f"{dag_task_counts[dag_name]}\n{dag_name}" for dag_name in dag_labels]
+  color_map = {alg: cmap(i % 10) for i, alg in enumerate(algorithms)}
 
   for metric_label, get_metric_val in metrics_to_plot.items():
-    plt.figure(figsize=(10, 5), constrained_layout=True)
+    plt.figure(figsize=(12, 6), constrained_layout=True)
 
-    dag_metric_values: dict[str, dict[str, float]] = {dag_name: {} for dag_name in dag_labels}
-    for algorithm in algorithms:
-      for _, dag_name, metrics in runs_by_algorithm.get(algorithm, []):
-        dag_metric_values.setdefault(dag_name, {})[algorithm] = get_metric_val(metrics)
-
-    if not dag_labels:
-      continue
-
-    x_positions = list(range(len(dag_labels)))
-    group_width = 0.8
+    x_positions = list(range(len(machine_counts)))
+    group_width = 0.85
     bar_width = group_width / max(len(algorithms), 1)
 
-    for index, algorithm in enumerate(algorithms):
-      bar_positions = [x - (group_width / 2) + (bar_width / 2) + (index * bar_width) for x in x_positions]
-      metric_values = [dag_metric_values.get(dag_name, {}).get(algorithm, 0.0) for dag_name in dag_labels]
+    best_vals = {}
+    for c in machine_counts:
+      vals = [get_metric_val(metrics_by_machine_count[c][alg]) for alg in algorithms]
+      if metric_label == "Balanceamento de carga":
+        best_vals[c] = min(vals, key=lambda x: abs(x - 1.0))
+      else:
+        best_vals[c] = min(vals)
 
-      plt.bar(
+    global_max_y = 0.0
+
+    for index, algorithm in enumerate(algorithms):
+      offset = (index - len(algorithms) / 2) * bar_width + bar_width / 2
+      bar_positions = [x + offset for x in x_positions]
+      
+      y_vals = [get_metric_val(metrics_by_machine_count[c][algorithm]) for c in machine_counts]
+      
+      if y_vals:
+        global_max_y = max(global_max_y, max(y_vals))
+      
+      bars = plt.bar(
         bar_positions,
-        metric_values,
+        y_vals,
         width=bar_width,
-        color=colors[algorithm],
-        edgecolor="#333333",
-        linewidth=0.8,
-        alpha=0.85,
+        color=color_map[algorithm],
+        edgecolor="black",
+        linewidth=1.2,
         label=algorithm,
-        zorder=2,
+        zorder=3
       )
 
-    plt.xticks(x_positions, dag_xtick_labels, rotation=30)
+      custom_labels = []
+      for c, val in zip(machine_counts, y_vals):
+        best = best_vals[c]
+        val_str = f"{val:.3f}"
+        
+        if val == best:
+          custom_labels.append(f"{val_str}\n(melhor)")
+        else:
+          if metric_label == "Balanceamento de carga":
+            dist_to_best = abs(val - best)
+            custom_labels.append(f"{val_str}\n(Δ={dist_to_best:.3f})")
+          else:
+            pct_diff = ((val - best) / best * 100) if best != 0 else 0.0
+            custom_labels.append(f"{val_str}\n+{pct_diff:.2f}%")
 
-    plt.title(f"{metric_label} by DAG file")
-    plt.xlabel("Task count")
-    plt.ylabel(metric_label)
-    plt.grid(axis='y', linestyle=':', alpha=0.4, zorder=1)
+      plt.bar_label(
+        bars, 
+        labels=custom_labels, 
+        padding=4, 
+        color="#111827", 
+        fontsize=8,
+        bbox=dict(facecolor='white', edgecolor='none', alpha=0.7, pad=0.5),
+        zorder=4
+      )
 
-    if metric_label == "Load balance":
+    plt.xlabel("Número de Máquinas", fontsize=14)
+    plt.ylabel("SLR Médio" if metric_label == "SLR" else metric_label, fontsize=14)
+    
+    plt.xticks(x_positions, machine_counts, fontsize=12)
+    plt.yticks(fontsize=12)
+    
+    plt.ylim(0, global_max_y * 1.35)
+
+    plt.tick_params(axis='both', direction='in', top=True, right=True, length=6)
+    plt.legend(loc="upper left", frameon=True, edgecolor="black", fontsize=10, borderpad=0.6)
+
+    if metric_label == "Balanceamento de carga":
       plt.axhline(y=1.0, color='red', linestyle='--', alpha=0.5, zorder=0)
 
-    plt.legend(loc="best", frameon=False)
-
-    plt.suptitle(f"Scheduler trends by DAG file for {dag_group_name}")
-    plt.show()
+    safe_metric_name = metric_label.replace(" ", "_").lower()
+    
+    file_path = output_dir / f"{safe_metric_name}.png"
+    
+    plt.savefig(file_path, bbox_inches='tight', dpi=300)
+    plt.close()

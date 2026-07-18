@@ -35,6 +35,12 @@ To change the input DAG, use `--dag-path`:
 ./ve/bin/python main.py --dag-path /absolute/path/to/your-dag.json
 ```
 
+`--dag-path` can also point to a directory with multiple DAG JSON files. When you run `--compare` with a directory, the simulator runs every scheduler on every DAG and plots each metric against the DAG task count so you can see how the topology scales.
+
+```bash
+./ve/bin/python main.py --compare --dag-path dag-instances/montage
+```
+
 Other available parameters:
 
 - `--log-level`: sets the log level. Accepted values are `CRITICAL`, `ERROR`, `WARNING`, `INFO`, and `DEBUG`.

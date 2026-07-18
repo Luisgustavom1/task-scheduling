@@ -2,10 +2,11 @@ import argparse
 import logging
 import pathlib
 import sys
+import os
 
-from wfcommons.common import Machine, machine
+from wfcommons.common import Machine
 
-from charts import plot_metric_comparison, plot_metric_trends
+from charts import plot_machine_scaling
 from metrics import SimulationMetrics
 from schedulers.dls import DLS
 from schedulers.peft import PEFT
@@ -83,39 +84,34 @@ def load_dag_paths(path: pathlib.Path) -> list[pathlib.Path]:
 
   parser.error(f"DAG path must be a file or directory: {path}")
 
-def load_workflow(path: pathlib.Path) -> wfinstances.Instance:
+instMap = {}
+
+def load_workflow(path: pathlib.Path, num_machines: None | int = 4) -> wfinstances.Instance:
+  if (path, num_machines) in instMap:
+    return instMap[(path, num_machines)]
+
   inst = wfinstances.Instance(
     input_instance=path,
     logger=logger,
   )
 
-  inst.machines = {
-    'machine1': Machine(
-      name="machine1",
-      cpu={"vendor": "GenuineIntel", "coreCount": 48, "speedInMHz": 1200},
-    ),
-    'machine2': Machine(
-      name="machine2",
-      cpu={"vendor": "GenuineIntel", "coreCount": 48, "speedInMHz": 1800},
-    ),
-    'machine3': Machine(
-      name="machine3",
-      cpu={"vendor": "GenuineIntel", "coreCount": 48, "speedInMHz": 2400},
-    ),
-    'machine4': Machine(
-      name="machine4",
-      cpu={"vendor": "GenuineIntel", "coreCount": 48, "speedInMHz": 3000},
-    )
-  } 
+  if num_machines is not None:
+    machines = {}
 
+    for i in range(num_machines):
+      speed = 1200 + (i % 4) * 600
+      machines[f'machine{i+1}'] = Machine(
+        name=f"machine{i+1}",
+        cpu={"vendor": "GenuineIntel", "coreCount": 48, "speedInMHz": speed},
+      )
+    
+    inst.machines = machines
+
+  instMap[(path, num_machines)] = inst
   return inst
 
-def count_tasks(path: pathlib.Path) -> int:
-  workflow = load_workflow(path)
-  return len(workflow.workflow.tasks)
-
-def run_scheduler(algorithm: str, path: pathlib.Path) -> SimulationMetrics:
-  workflow = load_workflow(path)
+def run_scheduler(algorithm: str, path: pathlib.Path, num_machines: int = 4) -> SimulationMetrics:
+  workflow = load_workflow(path, num_machines)
   simulator = Simulator(workflow, bandwidth=1250, logger=logger)
   scheduler = scheduler_map[algorithm](simulator)
   simulator.start(scheduler)
@@ -124,34 +120,55 @@ def run_scheduler(algorithm: str, path: pathlib.Path) -> SimulationMetrics:
 dag_paths = load_dag_paths(dag_path)
 
 if args.compare:
-  algorithms = list(scheduler_map.keys())
+  algorithms = ["HEFT", "IHEFT", "PEFT", "IPEFT", "DLS"]
+  machine_counts = [4, 8, 16, 32]
 
-  if dag_path.is_file():
-    metrics_by_algorithm: dict[str, SimulationMetrics] = {}
-    for algorithm in algorithms:
-      metrics_by_algorithm[algorithm] = run_scheduler(algorithm, dag_path)
+  for dag_file in dag_paths:
+    logger.info(f"\n========================================")
+    logger.info(f"=== Simulating for DAG: {dag_file.name} ===")
+    logger.info(f"========================================")
+    
+    results_dir = dag_file.parent / f"{dag_file.stem}-results"
 
-    plot_metric_comparison(algorithms, metrics_by_algorithm, dag_path.name)
-  else:
-    runs_by_algorithm: dict[str, list[tuple[int, str, SimulationMetrics]]] = {algorithm: [] for algorithm in algorithms}
+    if results_dir.exists():
+      logger.info(f"======= A pasta de resultados '{results_dir.name}' já existe. Pulando simulação... ====")
+      continue
 
-    for dag_file in dag_paths:
-      task_count = count_tasks(dag_file)
+    results_dir.mkdir(parents=True, exist_ok=True)
+    
+    inst = load_workflow(dag_file)
+
+    original_cwd = os.getcwd()
+    os.chdir(results_dir)
+    try:
+      inst.draw(extension=".png")    
+      logger.info(f"DAG layout image saved in {results_dir.name}/")
+    except Exception as e:
+      logger.warning(f"Could not draw DAG {dag_file.name}: {e}")
+    finally:
+      os.chdir(original_cwd)
+      
+    metrics_by_machine_count = {count: {} for count in machine_counts}
+    
+    for count in machine_counts:
+      logger.info(f"--- Simulating for {count} machines ---")
       for algorithm in algorithms:
-        metrics = run_scheduler(algorithm, dag_file)
-        runs_by_algorithm[algorithm].append((task_count, dag_file.stem, metrics))
+        metrics_by_machine_count[count][algorithm] = run_scheduler(algorithm, dag_file, count)
 
-    plot_metric_trends(algorithms, runs_by_algorithm, dag_path.name)
+    plot_machine_scaling(
+      algorithms=algorithms, 
+      metrics_by_machine_count=metrics_by_machine_count,
+      output_dir=results_dir
+    )
+    logger.info(f"Charts saved successfully in {results_dir.name}/")
+
   sys.exit(0)
 
 if args.scheduler:
-  if dag_path.is_file():
-    metrics = run_scheduler(args.scheduler, dag_path)
-    metrics.log(logger)
-  else:
-    for dag_file in dag_paths:
-      metrics = run_scheduler(args.scheduler, dag_file)
-      logger.info(f"DAG: {dag_file.name} ({count_tasks(dag_file)} tasks)")
-      metrics.log(logger)
+  if not dag_path.is_file():
+    parser.error("A flag --scheduler só pode ser usada com um único arquivo DAG específico, não com um diretório inteiro. Utilize --compare para análises de diretórios.")
+    
+  metrics = run_scheduler(args.scheduler, dag_path)
+  metrics.log(logger)
 else:
   logger.error("No scheduler selected. Use --scheduler to select an algorithm or --compare to run all algorithms.")
