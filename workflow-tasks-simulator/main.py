@@ -108,7 +108,7 @@ def load_workflow(path: pathlib.Path, num_machines: None | int) -> wfinstances.I
       
       machines[f'machine{p}'] = Machine(
         name=f"machine{p}",
-        cpu={"vendor": "Custom", "coreCount": 16, "speedInMHz": speed},
+        cpu={"vendor": "Custom", "coreCount": 8, "speedInMHz": speed},
       )
     
     inst.machines = machines
