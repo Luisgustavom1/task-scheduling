@@ -3,6 +3,7 @@ import logging
 import pathlib
 import sys
 import os
+import random
 
 from wfcommons.common import Machine
 
@@ -86,7 +87,7 @@ def load_dag_paths(path: pathlib.Path) -> list[pathlib.Path]:
 
 instMap = {}
 
-def load_workflow(path: pathlib.Path, num_machines: None | int = 4) -> wfinstances.Instance:
+def load_workflow(path: pathlib.Path, num_machines: None | int) -> wfinstances.Instance:
   if (path, num_machines) in instMap:
     return instMap[(path, num_machines)]
 
@@ -98,11 +99,16 @@ def load_workflow(path: pathlib.Path, num_machines: None | int = 4) -> wfinstanc
   if num_machines is not None:
     machines = {}
 
+    rng = random.Random(42)  # Fixed seed for reproducibility
+    
     for i in range(num_machines):
-      speed = 1200 + (i % 4) * 600
-      machines[f'machine{i+1}'] = Machine(
-        name=f"machine{i+1}",
-        cpu={"vendor": "GenuineIntel", "coreCount": 48, "speedInMHz": speed},
+      p = i + 1
+      gamma_p = rng.uniform(0.75, 1.25)
+      speed = int(gamma_p * 1000) 
+      
+      machines[f'machine{p}'] = Machine(
+        name=f"machine{p}",
+        cpu={"vendor": "Custom", "coreCount": 16, "speedInMHz": speed},
       )
     
     inst.machines = machines
@@ -110,7 +116,7 @@ def load_workflow(path: pathlib.Path, num_machines: None | int = 4) -> wfinstanc
   instMap[(path, num_machines)] = inst
   return inst
 
-def run_scheduler(algorithm: str, path: pathlib.Path, num_machines: int = 4) -> SimulationMetrics:
+def run_scheduler(algorithm: str, path: pathlib.Path, num_machines: int | None = None) -> SimulationMetrics:
   workflow = load_workflow(path, num_machines)
   simulator = Simulator(workflow, bandwidth=1250, logger=logger)
   scheduler = scheduler_map[algorithm](simulator)
@@ -127,7 +133,7 @@ if args.compare:
     logger.info(f"\n========================================")
     logger.info(f"=== Simulating for DAG: {dag_file.name} ===")
     logger.info(f"========================================")
-    
+
     results_dir = dag_file.parent / f"{dag_file.stem}-results"
 
     if results_dir.exists():
@@ -136,20 +142,30 @@ if args.compare:
 
     results_dir.mkdir(parents=True, exist_ok=True)
     
-    inst = load_workflow(dag_file)
+    inst = load_workflow(dag_file, 4)
+
+    tasks_qtd = len(inst.workflow.tasks)
+    scheduler_info = {
+      'tasks_qtd': tasks_qtd,
+    }
 
     original_cwd = os.getcwd()
     os.chdir(results_dir)
     try:
-      inst.draw(extension=".png")    
+      inst.draw(extension=".png")
+
+      with open("info.txt", "w") as f:
+        for key, value in scheduler_info.items():
+          f.write(f"{key}: {value}\n")
+
       logger.info(f"DAG layout image saved in {results_dir.name}/")
     except Exception as e:
-      logger.warning(f"Could not draw DAG {dag_file.name}: {e}")
+      logger.warning(f"Could not save files {dag_file.name}: {e}")
     finally:
       os.chdir(original_cwd)
       
     metrics_by_machine_count = {count: {} for count in machine_counts}
-    
+
     for count in machine_counts:
       logger.info(f"--- Simulating for {count} machines ---")
       for algorithm in algorithms:
@@ -168,7 +184,7 @@ if args.scheduler:
   if not dag_path.is_file():
     parser.error("A flag --scheduler só pode ser usada com um único arquivo DAG específico, não com um diretório inteiro. Utilize --compare para análises de diretórios.")
     
-  metrics = run_scheduler(args.scheduler, dag_path)
+  metrics = run_scheduler(args.scheduler, dag_path, 8)
   metrics.log(logger)
 else:
   logger.error("No scheduler selected. Use --scheduler to select an algorithm or --compare to run all algorithms.")
