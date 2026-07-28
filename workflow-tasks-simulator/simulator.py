@@ -161,7 +161,7 @@ class Simulator:
       tasks.append(max_cost_child)
 
   def start(self, scheduler: Scheduler):
-    self.logger.info(f"Starting scheduler...")
+    self.logger.info(f"Starting scheduler f{scheduler.__class__.__name__}...")
     self.scheduler = scheduler
     
     self.ready_tasks.append(self.start_task.task_id)
@@ -219,9 +219,9 @@ class Simulator:
     self.history[history.processor_id].sort(key=lambda x: x.start)
 
   def calculate_task_runtime(self, task: Task, processor: Processor) -> float:
-    if task.task_id.startswith("artificial_"):
+    if task.task_id.startswith("artificial_") or task.runtime == 0:
       return 0.0
-    
+
     if task.machines is None or len(task.machines) == 0 or len(task.machines) > 1:
       raise ValueError(f"Task {task.task_id} has no specific machine or multiple machines on execution specs, using default runtime.")
 

@@ -1,0 +1,26 @@
+DAG: seismology-chameleon-1100p-001.json
+Number of tasks: 1101
+machines quantity: 4
+  HEFT: {'Makespan': 52.606901802738676, 'SLR': 6.8030859553503324, 'Balanceamento de carga': 0.19635918843345865, 'Custo de comunicação': 15200.00381096965, 'Tempo total de espera': 24.16294880390904}
+  IHEFT: {'Makespan': 52.53506905012544, 'SLR': 6.793796596469825, 'Balanceamento de carga': 0.1961504526529555, 'Custo de comunicação': 15640.003924083252, 'Tempo total de espera': 23.94026592942006}
+  PEFT: {'Makespan': 54.091504590195115, 'SLR': 6.995073698907073, 'Balanceamento de carga': 0.2023816462109226, 'Custo de comunicação': 17380.00399633282, 'Tempo total de espera': 14.490735028073878}
+  IPEFT: {'Makespan': 52.606901802738676, 'SLR': 6.8030859553503324, 'Balanceamento de carga': 0.19635918843345865, 'Custo de comunicação': 15200.00381096965, 'Tempo total de espera': 24.16294880390904}
+  DLS: {'Makespan': 55.987285078, 'SLR': 7.2402346410848395, 'Balanceamento de carga': 0.20891459339080184, 'Custo de comunicação': 15260.003845254449, 'Tempo total de espera': 26.702312692683}
+machines quantity: 8
+  HEFT: {'Makespan': 35.77177215145631, 'SLR': 5.175557798894356, 'Balanceamento de carga': 0.2881752633875609, 'Custo de comunicação': 18720.004768691182, 'Tempo total de espera': 10.954529542346902}
+  IHEFT: {'Makespan': 35.69340097343144, 'SLR': 5.1642188425821605, 'Balanceamento de carga': 0.28780778320276834, 'Custo de comunicação': 19000.004899967964, 'Tempo total de espera': 10.938567942722042}
+  PEFT: {'Makespan': 38.011461637222496, 'SLR': 5.499602197256291, 'Balanceamento de carga': 0.31211130801588205, 'Custo de comunicação': 18300.004448031992, 'Tempo total de espera': 6.39210759178958}
+  IPEFT: {'Makespan': 35.575613703065784, 'SLR': 5.147177058262101, 'Balanceamento de carga': 0.289671980612355, 'Custo de comunicação': 18320.004597631993, 'Tempo total de espera': 10.934864449711231}
+  DLS: {'Makespan': 39.35307914138136, 'SLR': 5.693711085890143, 'Balanceamento de carga': 0.3168976850550451, 'Custo de comunicação': 18700.004803411182, 'Tempo total de espera': 13.6609688125288}
+machines quantity: 16
+  HEFT: {'Makespan': 28.856414214288936, 'SLR': 4.175024905183763, 'Balanceamento de carga': 0.4516262308882946, 'Custo de comunicação': 20320.005226521527, 'Tempo total de espera': 5.370302507344661}
+  IHEFT: {'Makespan': 28.82833299489834, 'SLR': 4.170962037585141, 'Balanceamento de carga': 0.4517452977226866, 'Custo de comunicação': 20630.005340735905, 'Tempo total de espera': 5.394620985927125}
+  PEFT: {'Makespan': 32.3199822096733, 'SLR': 4.676143392537838, 'Balanceamento de carga': 0.5209598173600178, 'Custo de comunicação': 18900.00467619198, 'Tempo total de espera': 3.122354537697812}
+  IPEFT: {'Makespan': 28.778156787384926, 'SLR': 4.163702406694743, 'Balanceamento de carga': 0.4553691355835114, 'Custo de comunicação': 19920.005006719948, 'Tempo total de espera': 5.430384097853419}
+  DLS: {'Makespan': 32.40449226481685, 'SLR': 4.68837053837594, 'Balanceamento de carga': 0.5064864625578399, 'Custo de comunicação': 20300.005182188732, 'Tempo total de espera': 7.805399980463025}
+machines quantity: 32
+  HEFT: {'Makespan': 25.07233097501806, 'SLR': 3.72459114574598, 'Balanceamento de carga': 0.8094177633458111, 'Custo de comunicação': 21210.005441254303, 'Tempo total de espera': 2.318551273098084}
+  IHEFT: {'Makespan': 24.963582612062027, 'SLR': 3.708436158394226, 'Balanceamento de carga': 0.8108928651593545, 'Custo de comunicação': 21300.005447199896, 'Tempo total de espera': 2.2913391742683773}
+  PEFT: {'Makespan': 29.08843203985446, 'SLR': 4.321198397038852, 'Balanceamento de carga': 0.9881365367927016, 'Custo de comunicação': 19080.004775769572, 'Tempo total de espera': 1.4915199173448468}
+  IPEFT: {'Makespan': 25.027117445579712, 'SLR': 3.717874502144642, 'Balanceamento de carga': 0.8185223509880857, 'Custo de comunicação': 20720.005200614323, 'Tempo total de espera': 2.4211794041113204}
+  DLS: {'Makespan': 28.148404359859494, 'SLR': 4.181553671657954, 'Balanceamento de carga': 0.9069841937145756, 'Custo de comunicação': 21140.005374009506, 'Tempo total de espera': 4.095710513486276}
